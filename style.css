@@ -1,0 +1,153 @@
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  height: 100%;
+  overflow: hidden;
+  background: #0b3d2e;
+  color: white;
+}
+
+.table {
+  position: relative;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+}
+.dealer {
+  margin: 70px auto 0px;
+  width: 650px;
+  background: #145c43;
+  border-radius: 20px;
+  padding: 20px;
+}
+.player {
+  margin: 0px auto 25px;
+  width: 650px;
+  background: #145c43;
+  border-radius: 20px;
+  padding: 20px;
+}
+.dealer h1 {
+  margin-top: 0px;
+}
+.player h1 {
+  margin-top: 0px;
+}
+.cards {
+  width: 650px;
+  height: 200px;
+  margin: 0px auto;
+  display: flex;
+  justify-content: start;
+  gap: 10px;
+}
+
+.card-container {
+  width: 100px;
+  height: 200px;
+}
+
+.card-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.bet-container {
+  display: none;
+  height: 100px;
+  width: 100px;
+  position: absolute;
+  left: 100px;
+  top: 30%;
+  transform: translateY(-50%);
+}
+
+.bet-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.chips {
+  position: absolute;
+  left: 50px;
+  bottom: 50px;
+  text-align: center;
+  display: flex;
+  align-items: flex-end;
+}
+.chips h2 {
+  color: goldenrod;
+}
+
+.chips-img-container {
+  height: 170px;
+  width: 170px;
+}
+
+.chips-img-container img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.start-button {
+  display: block;
+  position: absolute;
+  right: 100px;
+  bottom: 100px;
+}
+.start-button button {
+  padding: 11px 28px;
+  min-width: 120px;
+
+  font-size: 30px;
+  font-weight: 600;
+  color: white;
+
+  background: goldenrod;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+
+  cursor: pointer;
+}
+.game-buttons {
+  display: none;
+  gap: 16px;
+  position: absolute;
+  right: 100px;
+  bottom: 50%;
+}
+.game-buttons button {
+  padding: 10px 24px;
+  min-width: 120px;
+
+  font-size: 25px;
+  font-weight: 600;
+  color: white;
+
+  background: #1e6f52;
+  border: 2px solid rgba(255, 255, 255, 0.25);
+  border-radius: 12px;
+
+  cursor: pointer;
+}
+#hit {
+  background-color: green;
+}
+#stand {
+  background-color: crimson;
+}
+
+#gameMessage {
+  position: absolute;
+  top: 20px;
+  left: 50%;
+  transform: translateX(-50%);
+  margin: 0;
+}
