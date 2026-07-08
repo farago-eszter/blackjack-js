@@ -15,10 +15,10 @@ const ranks = [
   "A",
 ];
 const chipValue = 10;
-const blackJackScore = 21;
+const blackjackScore = 21;
 const bet = 1;
-const dealersCardsElement = document.getElementById("dealersCards");
-const playerCardsElement = document.getElementById("playersCards");
+const dealerCardsElement = document.getElementById("dealerCards");
+const playerCardsElement = document.getElementById("playerCards");
 const gameMessageElement = document.getElementById("gameMessage");
 const dealerScoreElement = document.getElementsByTagName("h1")[0];
 const playerScoreElement = document.getElementsByTagName("h1")[1];
@@ -39,6 +39,16 @@ let chipsValue = chips * chipValue;
 let deck = createDeck();
 let dealerHand = [];
 let playerHand = [];
+const participants = {
+  player: {
+    hand: playerHand,
+    cardsElement: playerCardsElement,
+  },
+  dealer: {
+    hand: dealerHand,
+    cardsElement: dealerCardsElement,
+  },
+};
 let gameResult;
 
 function startRound() {
@@ -46,7 +56,7 @@ function startRound() {
   shuffle();
   chips -= bet;
   chipsValue = chips * chipValue;
-  dealersCardsElement.innerHTML = "";
+  dealerCardsElement.innerHTML = "";
   playerCardsElement.innerHTML = "";
   gameMessageElement.textContent = "";
   drawInitialCards();
@@ -76,16 +86,16 @@ function shuffle() {
 }
 
 function drawInitialCards() {
-  playerHand = [deck.pop()];
-  addCardElement(true);
-  dealerHand = [deck.pop()];
-  addCardElement(false);
   playerHand.push(deck.pop());
-  addCardElement(true);
+  addCardElement("player");
+  dealerHand.push(deck.pop());
+  addCardElement("dealer");
+  playerHand.push(deck.pop());
+  addCardElement("player");
   const hiddenCard = deck.pop();
   hiddenCard.hidden = true;
   dealerHand.push(hiddenCard);
-  addCardElement(false);
+  addCardElement("dealer");
 }
 
 function setButtonsAndChipsValue() {
@@ -103,19 +113,23 @@ function setButtonsAndChipsValue() {
 
 function getBlackjackResult() {
   if (
-    getScore(playerHand) === blackJackScore &&
-    getScore(dealerHand, true) === blackJackScore
+    getScore(playerHand) === blackjackScore &&
+    playerHand.length === 2 &&
+    getScore(dealerHand, true) === blackjackScore
   ) {
-    gameResult = { winner: "tie", blackJack: true };
-  } else if (getScore(playerHand) === blackJackScore) {
-    gameResult = { winner: "player", blackJack: true };
+    gameResult = { winner: "tie", blackjack: true };
+  } else if (
+    getScore(playerHand) === blackjackScore &&
+    playerHand.length === 2
+  ) {
+    gameResult = { winner: "player", blackjack: true };
   }
 }
 
 function hit() {
   playerHand.push(deck.pop());
-  addCardElement(true);
-  if (getScore(playerHand) > blackJackScore) {
+  addCardElement("player");
+  if (getScore(playerHand) > blackjackScore) {
     endRound();
   }
 }
@@ -124,7 +138,7 @@ function stand() {
   revealHiddenCard();
   while (getScore(dealerHand) < 17) {
     dealerHand.push(deck.pop());
-    addCardElement(false);
+    addCardElement("dealer");
   }
   endRound();
 }
@@ -145,29 +159,27 @@ function getScore(cards, includeHiddenCards = false) {
       value += Number(card.rank);
     }
   }
-  while (value > blackJackScore && aceCounter > 0) {
+  let convertedAceCount = 0;
+  while (value > blackjackScore && convertedAceCount < aceCounter) {
     value -= 10;
-    aceCounter--;
+    convertedAceCount++;
   }
   return value;
 }
 
-function addCardElement(isPlayer) {
-  const card = isPlayer
-    ? playerHand[playerHand.length - 1]
-    : dealerHand[dealerHand.length - 1];
+function addCardElement(participant) {
+  const card =
+    participants[participant].hand[participants[participant].hand.length - 1];
   const cardElement = document.createElement("div");
   cardElement.classList.add("card-container");
   const ImgElement = document.createElement("img");
+  console.log(card);
   ImgElement.src = card.hasOwnProperty("hidden")
     ? "./assets/cards/poker-cards-hidden-card.svg"
     : `./assets/cards/poker-cards-${card.suit}-${card.rank}.svg`;
   cardElement.appendChild(ImgElement);
-  isPlayer
-    ? playersCards.appendChild(cardElement)
-    : dealersCards.appendChild(cardElement);
-
-  if (isPlayer) {
+  participants[participant].cardsElement.appendChild(cardElement);
+  if (participant === "player") {
     playerScoreElement.textContent = `Player: ${getScore(playerHand)}`;
   } else {
     dealerScoreElement.textContent = `Dealer: ${getScore(dealerHand)}`;
@@ -179,16 +191,16 @@ function showGameMessage(message) {
 }
 
 function checkWinner() {
-  if (getScore(playerHand) > blackJackScore) {
-    gameResult = { winner: "dealer", blackJack: false };
-  } else if (getScore(dealerHand) > blackJackScore) {
-    gameResult = { winner: "player", blackJack: false };
+  if (getScore(playerHand) > blackjackScore) {
+    gameResult = { winner: "dealer", blackjack: false };
+  } else if (getScore(dealerHand) > blackjackScore) {
+    gameResult = { winner: "player", blackjack: false };
   } else if (getScore(playerHand) > getScore(dealerHand)) {
-    gameResult = { winner: "player", blackJack: false };
+    gameResult = { winner: "player", blackjack: false };
   } else if (getScore(dealerHand) > getScore(playerHand)) {
-    gameResult = { winner: "dealer", blackJack: false };
+    gameResult = { winner: "dealer", blackjack: false };
   } else {
-    gameResult = { winner: "tie", blackJack: false };
+    gameResult = { winner: "tie", blackjack: false };
   }
 }
 
@@ -200,22 +212,22 @@ function endRound() {
   }
   updateChips();
   showResult();
-  playerHand = [];
-  dealerHand = [];
+  playerHand.length = 0;
+  dealerHand.length = 0;
   gameResult = undefined;
   setButtonsAndChipsValue();
   checkOutOfChips();
 }
 
 function revealHiddenCard() {
-  dealersCardsElement.children[1].children[0].src = `./assets/cards/poker-cards-${dealerHand[1].suit}-${dealerHand[1].rank}.svg`;
+  dealerCardsElement.children[1].children[0].src = `./assets/cards/poker-cards-${dealerHand[1].suit}-${dealerHand[1].rank}.svg`;
   delete dealerHand[1].hidden;
 }
 
 function updateChips() {
-  if (gameResult.winner === "player" && gameResult.blackJack === false) {
+  if (gameResult.winner === "player" && gameResult.blackjack === false) {
     chips += bet * 2;
-  } else if (gameResult.winner === "player" && gameResult.blackJack === true) {
+  } else if (gameResult.winner === "player" && gameResult.blackjack === true) {
     chips += bet * 3;
   } else if (gameResult.winner === "tie") {
     chips += bet;
@@ -225,13 +237,13 @@ function updateChips() {
 
 function showResult() {
   if (gameResult.winner === "player") {
-    if (gameResult.blackJack) {
+    if (gameResult.blackjack) {
       showGameMessage(messages.blackjack);
     } else {
       showGameMessage(messages.win);
     }
   } else if (gameResult.winner === "dealer") {
-    if (getScore(playerHand) > blackJackScore) {
+    if (getScore(playerHand) > blackjackScore) {
       showGameMessage(messages.busted);
     } else {
       showGameMessage(messages.lose);
