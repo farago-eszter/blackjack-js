@@ -1,19 +1,5 @@
 const suits = ["♥", "♦", "♣", "♠"];
-const ranks = [
-  "2",
-  "3",
-  "4",
-  "5",
-  "6",
-  "7",
-  "8",
-  "9",
-  "10",
-  "J",
-  "Q",
-  "K",
-  "A",
-];
+const ranks = ["2", "3", "4", "5", "6", "7", "8", "9", "10", "J", "Q", "K", "A"];
 const chipValue = 10;
 const blackjackScore = 21;
 const bet = 1;
@@ -112,18 +98,17 @@ function setButtonsAndChipsValue() {
 }
 
 function getBlackjackResult() {
-  if (
-    getScore(playerHand) === blackjackScore &&
-    playerHand.length === 2 &&
-    getScore(dealerHand, true) === blackjackScore
-  ) {
-    gameResult = { winner: "tie", blackjack: true };
-  } else if (
-    getScore(playerHand) === blackjackScore &&
-    playerHand.length === 2
-  ) {
-    gameResult = { winner: "player", blackjack: true };
+  if (isBlackjack()) {
+    if (getScore(dealerHand, true) === blackjackScore) {
+      gameResult = { winner: "tie", blackjack: true };
+    } else {
+      gameResult = { winner: "player", blackjack: true };
+    }
   }
+}
+
+function isBlackjack() {
+  return getScore(playerHand) === blackjackScore && playerHand.length === 2;
 }
 
 function hit() {
@@ -168,8 +153,7 @@ function getScore(cards, includeHiddenCards = false) {
 }
 
 function addCardElement(participant) {
-  const card =
-    participants[participant].hand[participants[participant].hand.length - 1];
+  const card = participants[participant].hand[participants[participant].hand.length - 1];
   const cardElement = document.createElement("div");
   cardElement.classList.add("card-container");
   const ImgElement = document.createElement("img");
