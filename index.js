@@ -188,7 +188,7 @@ function checkWinner(playerHand, dealerHand) {
 
 function endRound(playerHand, dealerHand, gameResult) {
   revealHiddenCard(dealerHand);
-  dealerScoreElement.textContent = `Dealer: ${getScore(dealerHand)}`;
+  dealerScoreElement.textContent = getScore(dealerHand);
   if (!gameResult.winner) {
     gameResult = checkWinner(playerHand, dealerHand);
   }
