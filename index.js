@@ -6,10 +6,12 @@ const bet = 1;
 const dealerCardsElement = document.getElementById("dealerCards");
 const playerCardsElement = document.getElementById("playerCards");
 const gameMessageElement = document.getElementById("gameMessage");
-const dealerScoreElement = document.getElementsByTagName("h1")[0];
-const playerScoreElement = document.getElementsByTagName("h1")[1];
+const dealerScoreElement = document.getElementsByTagName("h1")[1];
+const playerScoreElement = document.getElementsByTagName("h1")[3];
 const startButtonElement = document.getElementsByClassName("start-button")[0];
 const gameButtonsElement = document.getElementsByClassName("game-buttons")[0];
+const hitButtonElement = document.getElementById("hit");
+const standButtonElement = document.getElementById("stand");
 const betContainerElement = document.getElementsByClassName("bet-container")[0];
 const chipsValueElement = document.getElementById("chipsValue");
 const messages = {
@@ -20,37 +22,32 @@ const messages = {
   tie: "🤝 It's a tie.",
   outOfChips: "💸 Out of chips!",
 };
+let deck = [];
 let chips = 10;
 let chipsValue = chips * chipValue;
-let deck = createDeck();
-let dealerHand = [];
-let playerHand = [];
-const participants = {
-  player: {
-    hand: playerHand,
-    cardsElement: playerCardsElement,
-  },
-  dealer: {
-    hand: dealerHand,
-    cardsElement: dealerCardsElement,
-  },
-};
-let gameResult;
 
 function startRound() {
   deck = createDeck();
-  shuffle();
+  deck = shuffle(deck);
   chips -= bet;
   chipsValue = chips * chipValue;
   dealerCardsElement.innerHTML = "";
   playerCardsElement.innerHTML = "";
   gameMessageElement.textContent = "";
-  drawInitialCards();
-  setButtonsAndChipsValue();
-  getBlackjackResult();
-  if (gameResult) {
-    endRound();
+  let { dealerHand, playerHand } = drawInitialCards(deck);
+
+  setButtonsAndChipsValue(playerHand.length !== 0);
+  gameResult = getBlackjackResult(playerHand, dealerHand);
+  if (gameResult.blackjack) {
+    endRound(playerHand, dealerHand, gameResult);
   }
+  hitButtonElement.onclick = () => {
+    hit(playerHand, dealerHand, gameResult);
+  };
+
+  standButtonElement.onclick = () => {
+    stand(playerHand, dealerHand, gameResult);
+  };
 }
 
 function createDeck() {
@@ -63,7 +60,7 @@ function createDeck() {
   return deck;
 }
 
-function shuffle() {
+function shuffle(deck) {
   for (let i = deck.length - 1; i > 0; i--) {
     const j = Math.floor(Math.random() * (i + 1));
     [deck[i], deck[j]] = [deck[j], deck[i]];
@@ -71,61 +68,67 @@ function shuffle() {
   return deck;
 }
 
-function drawInitialCards() {
+function drawInitialCards(deck) {
+  let dealerHand = [];
+  let playerHand = [];
   playerHand.push(deck.pop());
-  addCardElement("player");
+  addCardElement(playerHand, playerCardsElement, playerScoreElement);
   dealerHand.push(deck.pop());
-  addCardElement("dealer");
+  addCardElement(dealerHand, dealerCardsElement, dealerScoreElement);
   playerHand.push(deck.pop());
-  addCardElement("player");
+  addCardElement(playerHand, playerCardsElement, playerScoreElement);
   const hiddenCard = deck.pop();
   hiddenCard.hidden = true;
   dealerHand.push(hiddenCard);
-  addCardElement("dealer");
+  addCardElement(dealerHand, dealerCardsElement, dealerScoreElement);
+  return { dealerHand, playerHand };
 }
 
-function setButtonsAndChipsValue() {
-  if (playerHand.length === 0) {
+function setButtonsAndChipsValue(isGameStarted) {
+  if (!isGameStarted) {
     startButtonElement.style.display = "block";
     gameButtonsElement.style.display = "none";
     betContainerElement.style.display = "none";
   } else {
     startButtonElement.style.display = "none";
     gameButtonsElement.style.display = "flex";
-    betContainerElement.style.display = "block";
+    betContainerElement.style.display = "flex";
   }
   chipsValueElement.textContent = chipsValue + "$";
 }
 
-function getBlackjackResult() {
-  if (isBlackjack()) {
-    if (getScore(dealerHand, true) === blackjackScore) {
-      gameResult = { winner: "tie", blackjack: true };
+function getBlackjackResult(playerHand, dealerHand) {
+  let result = { winner: undefined, blackjack: false };
+  if (isBlackjack(playerHand)) {
+    if (isBlackjack(dealerHand, true)) {
+      result = { winner: "tie", blackjack: true };
     } else {
-      gameResult = { winner: "player", blackjack: true };
+      result = { winner: "player", blackjack: true };
     }
   }
+  return result;
 }
 
-function isBlackjack() {
-  return getScore(playerHand) === blackjackScore && playerHand.length === 2;
+function isBlackjack(hand, includeHiddenCards = false) {
+  return getScore(hand, includeHiddenCards) === blackjackScore && hand.length === 2;
 }
 
-function hit() {
+function hit(playerHand, dealerHand, gameResult) {
   playerHand.push(deck.pop());
-  addCardElement("player");
+  addCardElement(playerHand, playerCardsElement, playerScoreElement);
   if (getScore(playerHand) > blackjackScore) {
-    endRound();
+    endRound(playerHand, dealerHand, gameResult);
   }
 }
 
-function stand() {
-  revealHiddenCard();
+function stand(playerHand, dealerHand, gameResult) {
+  revealHiddenCard(dealerHand);
   while (getScore(dealerHand) < 17) {
     dealerHand.push(deck.pop());
-    addCardElement("dealer");
+    addCardElement(dealerHand, dealerCardsElement, dealerScoreElement);
   }
-  endRound();
+  console.log(dealerHand);
+  endRound(playerHand, dealerHand, gameResult);
 }
 
 function getScore(cards, includeHiddenCards = false) {
@@ -152,29 +155,25 @@ function getScore(cards, includeHiddenCards = false) {
   return value;
 }
 
-function addCardElement(participant) {
-  const card = participants[participant].hand[participants[participant].hand.length - 1];
+function addCardElement(hand, cardsElement, scoreElement) {
+  const card = hand[hand.length - 1];
   const cardElement = document.createElement("div");
   cardElement.classList.add("card-container");
   const ImgElement = document.createElement("img");
-  console.log(card);
   ImgElement.src = card.hasOwnProperty("hidden")
     ? "./assets/cards/poker-cards-hidden-card.svg"
     : `./assets/cards/poker-cards-${card.suit}-${card.rank}.svg`;
   cardElement.appendChild(ImgElement);
-  participants[participant].cardsElement.appendChild(cardElement);
-  if (participant === "player") {
-    playerScoreElement.textContent = `Player: ${getScore(playerHand)}`;
-  } else {
-    dealerScoreElement.textContent = `Dealer: ${getScore(dealerHand)}`;
-  }
+  cardsElement.appendChild(cardElement);
+  scoreElement.textContent = getScore(hand);
 }
 
 function showGameMessage(message) {
   gameMessageElement.textContent = message;
 }
 
-function checkWinner() {
+function checkWinner(playerHand, dealerHand) {
+  let gameResult;
   if (getScore(playerHand) > blackjackScore) {
     gameResult = { winner: "dealer", blackjack: false };
   } else if (getScore(dealerHand) > blackjackScore) {
@@ -186,16 +185,18 @@ function checkWinner() {
   } else {
     gameResult = { winner: "tie", blackjack: false };
   }
+  return gameResult;
 }
 
-function endRound() {
-  revealHiddenCard();
+function endRound(playerHand, dealerHand, gameResult) {
+  console.log(dealerHand);
+  revealHiddenCard(dealerHand);
   dealerScoreElement.textContent = `Dealer: ${getScore(dealerHand)}`;
-  if (!gameResult) {
-    checkWinner();
+  if (!gameResult.winner) {
+    gameResult = checkWinner(playerHand, dealerHand);
   }
-  updateChips();
-  showResult();
+  updateChips(gameResult);
+  showResult(playerHand, gameResult);
   playerHand.length = 0;
   dealerHand.length = 0;
   gameResult = undefined;
@@ -203,12 +204,14 @@ function endRound() {
   checkOutOfChips();
 }
 
-function revealHiddenCard() {
+function revealHiddenCard(dealerHand) {
+  console.log(dealerCardsElement.children);
+  console.log(dealerHand);
   dealerCardsElement.children[1].children[0].src = `./assets/cards/poker-cards-${dealerHand[1].suit}-${dealerHand[1].rank}.svg`;
   delete dealerHand[1].hidden;
 }
 
-function updateChips() {
+function updateChips(gameResult) {
   if (gameResult.winner === "player" && gameResult.blackjack === false) {
     chips += bet * 2;
   } else if (gameResult.winner === "player" && gameResult.blackjack === true) {
@@ -219,7 +222,7 @@ function updateChips() {
   chipsValue = chips * chipValue;
 }
 
-function showResult() {
+function showResult(playerHand, gameResult) {
   if (gameResult.winner === "player") {
     if (gameResult.blackjack) {
       showGameMessage(messages.blackjack);

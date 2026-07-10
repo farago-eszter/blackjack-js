@@ -65,6 +65,11 @@ body {
   left: 100px;
   top: 30%;
   transform: translateY(-50%);
+  align-items: flex-end;
+}
+.bet-container h2 {
+  margin-left: 8px;
+  color: goldenrod;
 }
 
 .bet-container img {
@@ -150,4 +155,7 @@ body {
   left: 50%;
   transform: translateX(-50%);
   margin: 0;
+}
+h1 {
+  display: inline;
 }
