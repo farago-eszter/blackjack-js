@@ -197,7 +197,7 @@ function endRound(playerHand, dealerHand, gameResult) {
   playerHand.length = 0;
   dealerHand.length = 0;
   gameResult = undefined;
-  setButtonsAndChipsValue();
+  setButtonsAndChipsValue(playerHand.length !== 0);
   checkOutOfChips();
 }
 
