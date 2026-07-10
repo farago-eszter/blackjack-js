@@ -44,7 +44,6 @@ function startRound() {
   hitButtonElement.onclick = () => {
     hit(playerHand, dealerHand, gameResult);
   };
-
   standButtonElement.onclick = () => {
     stand(playerHand, dealerHand, gameResult);
   };
@@ -127,7 +126,6 @@ function stand(playerHand, dealerHand, gameResult) {
     dealerHand.push(deck.pop());
     addCardElement(dealerHand, dealerCardsElement, dealerScoreElement);
   }
-  console.log(dealerHand);
   endRound(playerHand, dealerHand, gameResult);
 }
 
@@ -189,7 +187,6 @@ function checkWinner(playerHand, dealerHand) {
 }
 
 function endRound(playerHand, dealerHand, gameResult) {
-  console.log(dealerHand);
   revealHiddenCard(dealerHand);
   dealerScoreElement.textContent = `Dealer: ${getScore(dealerHand)}`;
   if (!gameResult.winner) {
@@ -205,8 +202,6 @@ function endRound(playerHand, dealerHand, gameResult) {
 }
 
 function revealHiddenCard(dealerHand) {
-  console.log(dealerCardsElement.children);
-  console.log(dealerHand);
   dealerCardsElement.children[1].children[0].src = `./assets/cards/poker-cards-${dealerHand[1].suit}-${dealerHand[1].rank}.svg`;
   delete dealerHand[1].hidden;
 }
