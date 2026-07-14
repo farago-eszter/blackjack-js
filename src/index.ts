@@ -2,14 +2,9 @@ import { Dealer } from "./classes/dealer.js";
 import { Player } from "./classes/player.js";
 import { BlackjackCard } from "./classes/blackjackCard.js";
 import { GameResult } from "./interfaces/gameResult.js";
-import { suits, ranks, messages, Winner, Message, BlackjackSettings } from "./types/types.js";
+import { suits, ranks, messages, Winner, Message } from "./types/types.js";
+import { blackjackSettings } from "./gameConfig.js";
 
-const blackjackSettings: BlackjackSettings = {
-  chipValue: 10,
-  startingChips: 10,
-  bet: 1,
-  blackjackScore: 21,
-};
 const dealerCardsElement = document.getElementById("dealerCards") as HTMLDivElement;
 const playerCardsElement = document.getElementById("playerCards") as HTMLDivElement;
 const gameMessageElement = document.getElementById("gameMessage") as HTMLHeadingElement;
@@ -40,15 +35,15 @@ async function startRound(): Promise<void> {
   showBet();
   await drawInitialCards(deck, player, dealer);
   showGameButtons();
-  let gameResult = getBlackjackResult(player, dealer as Dealer);
+  let gameResult = getBlackjackResult(player, dealer);
   if (gameResult?.blackjack) {
-    endRound(player, dealer as Dealer, gameResult);
+    endRound(player, dealer, gameResult);
   }
   hitButtonElement.onclick = async () => {
-    await hit(player, dealer as Dealer, gameResult);
+    await hit(player, dealer, gameResult);
   };
   standButtonElement.onclick = async () => {
-    await stand(player, dealer as Dealer, gameResult);
+    await stand(player, dealer, gameResult);
   };
 }
 
@@ -70,17 +65,35 @@ function shuffle(deck: BlackjackCard[]): BlackjackCard[] {
   return deck;
 }
 
-async function drawInitialCards(deck: BlackjackCard[], player: Player, dealer: Player): Promise<void> {
-  player.addCard(deck.pop()!);
-  await player.addCardElement(blackjackSettings.blackjackScore);
-  dealer.addCard(deck.pop()!);
-  await dealer.addCardElement(blackjackSettings.blackjackScore);
-  player.addCard(deck.pop()!);
-  await player.addCardElement(blackjackSettings.blackjackScore);
-  const hiddenCard = deck.pop()!;
-  hiddenCard.hidden = true;
-  dealer.addCard(hiddenCard);
-  await dealer.addCardElement(blackjackSettings.blackjackScore);
+async function drawInitialCards(deck: BlackjackCard[], player: Player, dealer: Dealer): Promise<void> {
+  let playerScore: number;
+  let dealerScore: number;
+  let card: BlackjackCard;
+  playerScore = player.getScore();
+  player.updateScoreElement(playerScore);
+  dealerScore = dealer.getScore();
+  dealer.updateScoreElement(dealerScore);
+  card = deck.pop()!;
+  player.addCard(card);
+  await player.addCardElement(card);
+  playerScore = player.getScore();
+  player.updateScoreElement(playerScore);
+  card = deck.pop()!;
+  dealer.addCard(card);
+  await dealer.addCardElement(card);
+  dealerScore = dealer.getScore();
+  dealer.updateScoreElement(dealerScore);
+  card = deck.pop()!;
+  player.addCard(card);
+  await player.addCardElement(card);
+  playerScore = player.getScore();
+  player.updateScoreElement(playerScore);
+  card = deck.pop()!;
+  card.hidden = true;
+  dealer.addCard(card);
+  await dealer.addCardElement(card);
+  dealerScore = dealer.getScore();
+  dealer.updateScoreElement(dealerScore);
 }
 
 function showStartButton(): void {
@@ -111,17 +124,17 @@ function getBlackjackResult(player: Player, dealer: Dealer): GameResult | undefi
 }
 
 function isBlackjack(participant: Player | Dealer, includeHiddenCards = false): boolean {
-  return (
-    participant.getScore(blackjackSettings.blackjackScore, includeHiddenCards) === blackjackSettings.blackjackScore &&
-    participant.hand.length === 2
-  );
+  return participant.getScore(includeHiddenCards) === blackjackSettings.blackjackScore && participant.hand.length === 2;
 }
 
 async function hit(player: Player, dealer: Dealer, gameResult?: GameResult): Promise<void> {
   hitButtonElement.disabled = true;
-  player.addCard(deck.pop()!);
-  await player.addCardElement(blackjackSettings.blackjackScore);
-  if (player.isBusted(blackjackSettings.blackjackScore)) {
+  const card = deck.pop()!;
+  player.addCard(card);
+  await player.addCardElement(card);
+  const playerScore = player.getScore();
+  player.updateScoreElement(playerScore);
+  if (player.isBusted(playerScore)) {
     endRound(player, dealer, gameResult);
   }
   hitButtonElement.disabled = false;
@@ -130,9 +143,14 @@ async function hit(player: Player, dealer: Dealer, gameResult?: GameResult): Pro
 async function stand(player: Player, dealer: Dealer, gameResult?: GameResult): Promise<void> {
   standButtonElement.disabled = true;
   dealer.revealHiddenCard();
-  while (dealer.getScore(blackjackSettings.blackjackScore) < 17) {
-    dealer.addCard(deck.pop()!);
-    await dealer.addCardElement(blackjackSettings.blackjackScore);
+  let dealerScore = dealer.getScore();
+  dealer.updateScoreElement(dealerScore);
+  while (dealerScore < 17) {
+    const card = deck.pop()!;
+    dealer.addCard(card);
+    await dealer.addCardElement(card);
+    dealerScore = dealer.getScore();
+    dealer.updateScoreElement(dealerScore);
   }
   endRound(player, dealer, gameResult);
   standButtonElement.disabled = false;
@@ -143,12 +161,12 @@ function showGameMessage(message: Message): void {
 }
 
 function checkWinner(player: Player, dealer: Dealer): GameResult {
-  let playerScore = player.getScore(blackjackSettings.blackjackScore);
-  let dealerScore = dealer.getScore(blackjackSettings.blackjackScore);
+  const playerScore = player.getScore();
+  const dealerScore = dealer.getScore();
   let result: GameResult;
-  if (player.isBusted(blackjackSettings.blackjackScore)) {
+  if (player.isBusted(playerScore)) {
     result = { winner: Winner.Dealer, blackjack: false };
-  } else if (dealer.isBusted(blackjackSettings.blackjackScore)) {
+  } else if (dealer.isBusted(dealerScore)) {
     result = { winner: Winner.Player, blackjack: false };
   } else if (playerScore > dealerScore) {
     result = { winner: Winner.Player, blackjack: false };
@@ -162,7 +180,7 @@ function checkWinner(player: Player, dealer: Dealer): GameResult {
 
 function endRound(player: Player, dealer: Dealer, gameResult?: GameResult): void {
   dealer.revealHiddenCard();
-  dealerScoreElement.textContent = String(dealer.getScore(blackjackSettings.blackjackScore));
+  dealerScoreElement.textContent = String(dealer.getScore());
   if (!gameResult?.winner) {
     gameResult = checkWinner(player, dealer);
   }
@@ -188,6 +206,7 @@ function updateChips(gameResult: GameResult): void {
 }
 
 function showResult(player: Player, gameResult: GameResult): void {
+  const playerScore = player.getScore();
   if (gameResult.winner === Winner.Player) {
     if (gameResult.blackjack) {
       showGameMessage(messages.blackjack);
@@ -195,7 +214,7 @@ function showResult(player: Player, gameResult: GameResult): void {
       showGameMessage(messages.win);
     }
   } else if (gameResult.winner === Winner.Dealer) {
-    if (player.isBusted(blackjackSettings.blackjackScore)) {
+    if (player.isBusted(playerScore)) {
       showGameMessage(messages.busted);
     } else {
       showGameMessage(messages.lose);

@@ -1,4 +1,5 @@
 import { BlackjackCard } from "../classes/blackjackCard.js";
+import { blackjackSettings } from "../gameConfig.js";
 
 export abstract class Participant {
   private _hand: BlackjackCard[] = [];
@@ -20,7 +21,7 @@ export abstract class Participant {
     this._hand = [];
   }
 
-  getScore(blackjackScore: number, includeHiddenCards?: boolean): number {
+  getScore(includeHiddenCards?: boolean): number {
     let value = 0;
     let aceCounter = 0;
     let cards;
@@ -36,32 +37,38 @@ export abstract class Participant {
       value += card.getValue();
     }
     let convertedAceCount = 0;
-    while (value > blackjackScore && convertedAceCount < aceCounter) {
+    while (value > blackjackSettings.blackjackScore && convertedAceCount < aceCounter) {
       value -= 10;
       convertedAceCount++;
     }
     return value;
   }
 
-  async addCardElement(blackjackScore: number): Promise<void> {
-    await sleep(300);
-    const card = this.hand[this.hand.length - 1];
+  async addCardElement(card: BlackjackCard): Promise<void> {
     const cardElement = document.createElement("div");
-    cardElement.classList.add("card-container");
+    cardElement.classList.add("card-container", "card-deal-animation");
     const imgElement = document.createElement("img");
     imgElement.src = card.hidden
       ? "../assets/cards/poker-cards-hidden-card.svg"
       : `../assets/cards/poker-cards-${card.suit}-${card.rank}.svg`;
     cardElement.appendChild(imgElement);
     this.cardsElement.appendChild(cardElement);
-    this.scoreElement.textContent = String(this.getScore(blackjackScore));
+    await this.waitForAnimation(cardElement);
   }
 
-  isBusted(blackjackScore: number): boolean {
-    return this.getScore(blackjackScore) > blackjackScore;
+  private waitForAnimation(element: HTMLDivElement): Promise<void> {
+    return new Promise((resolve) => {
+      element.addEventListener("animationend", () => resolve(), {
+        once: true,
+      });
+    });
   }
-}
 
-function sleep(ms: number): Promise<void> {
-  return new Promise((resolve) => setTimeout(resolve, ms));
+  updateScoreElement(score: number): void {
+    this.scoreElement.textContent = String(score);
+  }
+
+  isBusted(score: number): boolean {
+    return score > blackjackSettings.blackjackScore;
+  }
 }
