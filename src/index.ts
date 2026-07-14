@@ -25,6 +25,17 @@ startButtonElement.onclick = startRound;
 async function startRound(): Promise<void> {
   const player = new Player(playerCardsElement, playerScoreElement);
   const dealer = new Dealer(dealerCardsElement, dealerScoreElement);
+  prepareRound(player, dealer);
+  await drawInitialCards(deck, player, dealer);
+  showGameButtons();
+  let gameResult = getBlackjackResult(player, dealer);
+  if (gameResult?.blackjack) {
+    endRound(player, dealer, gameResult);
+  }
+  setGameButtonHandlers(player, dealer, gameResult);
+}
+
+function prepareRound(player: Player, dealer: Dealer): void {
   deck = createDeck();
   deck = shuffle(deck);
   chips -= blackjackSettings.bet;
@@ -32,13 +43,12 @@ async function startRound(): Promise<void> {
   dealer.cardsElement.innerHTML = "";
   player.cardsElement.innerHTML = "";
   gameMessageElement.textContent = "";
+  player.updateScoreElement(0);
+  dealer.updateScoreElement(0);
   showBet();
-  await drawInitialCards(deck, player, dealer);
-  showGameButtons();
-  let gameResult = getBlackjackResult(player, dealer);
-  if (gameResult?.blackjack) {
-    endRound(player, dealer, gameResult);
-  }
+}
+
+function setGameButtonHandlers(player: Player, dealer: Dealer, gameResult?: GameResult): void {
   hitButtonElement.onclick = async () => {
     await hit(player, dealer, gameResult);
   };
@@ -66,34 +76,18 @@ function shuffle(deck: BlackjackCard[]): BlackjackCard[] {
 }
 
 async function drawInitialCards(deck: BlackjackCard[], player: Player, dealer: Dealer): Promise<void> {
-  let playerScore: number;
-  let dealerScore: number;
-  let card: BlackjackCard;
-  playerScore = player.getScore();
-  player.updateScoreElement(playerScore);
-  dealerScore = dealer.getScore();
-  dealer.updateScoreElement(dealerScore);
-  card = deck.pop()!;
-  player.addCard(card);
-  await player.addCardElement(card);
-  playerScore = player.getScore();
-  player.updateScoreElement(playerScore);
-  card = deck.pop()!;
-  dealer.addCard(card);
-  await dealer.addCardElement(card);
-  dealerScore = dealer.getScore();
-  dealer.updateScoreElement(dealerScore);
-  card = deck.pop()!;
-  player.addCard(card);
-  await player.addCardElement(card);
-  playerScore = player.getScore();
-  player.updateScoreElement(playerScore);
-  card = deck.pop()!;
-  card.hidden = true;
-  dealer.addCard(card);
-  await dealer.addCardElement(card);
-  dealerScore = dealer.getScore();
-  dealer.updateScoreElement(dealerScore);
+  await dealCard(deck, player);
+  await dealCard(deck, dealer);
+  await dealCard(deck, player);
+  await dealCard(deck, dealer, true);
+}
+async function dealCard(deck: BlackjackCard[], participant: Player | Dealer, hidden = false): Promise<void> {
+  const card = deck.pop()!;
+  card.hidden = hidden;
+  participant.addCard(card);
+  await participant.addCardElement(card);
+  const score = participant.getScore();
+  participant.updateScoreElement(score);
 }
 
 function showStartButton(): void {
