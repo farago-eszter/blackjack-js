@@ -1,0 +1,44 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <link rel="stylesheet" href="style.css" />
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.7.1/jquery.min.js"></script>
+  </head>
+  <body>
+    <div class="table">
+      <h2 id="gameMessage"></h2>
+      <div class="dealer">
+        <h1>Dealer:</h1>
+        <h1></h1>
+      </div>
+      <div id="dealerCards" class="cards"></div>
+      <div id="playerCards" class="cards"></div>
+      <div class="player">
+        <h1>Player:</h1>
+        <h1></h1>
+      </div>
+      <div class="bet-container">
+        <img src="/assets/chips/bet-chip.svg" alt="" />
+        <h2>10$</h2>
+      </div>
+      <div class="chips">
+        <div class="chips-img-container">
+          <img src="/assets/chips/chips.svg" alt="" />
+        </div>
+        <h2 id="chipsValue">100$</h2>
+      </div>
+      <div class="start-button">
+        <button id="new-round">New Round</button>
+        <button id="new-game">New Game</button>
+      </div>
+      <div class="game-buttons">
+        <button id="hit">Hit</button>
+        <button id="stand">Stand</button>
+      </div>
+    </div>
+    <script type="module" src="index.js"></script>
+  </body>
+</html>
