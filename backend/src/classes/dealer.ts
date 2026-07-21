@@ -5,7 +5,11 @@ export class Dealer extends Participant {
     super();
   }
   revealHiddenCard(): void {
-    this.hand[1].hidden = false;
+    this.hand
+      .filter((card) => card.hidden)
+      .forEach((card) => {
+        card.hidden = false;
+      });
     this._scores[1] = this.hand[0].getValue() + this.hand[1].getValue();
   }
 }

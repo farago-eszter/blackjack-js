@@ -8,7 +8,9 @@ import { gameState } from "./server.js";
 
 export let deck: BlackjackCard[] = [];
 
-export function prepareRound(): void {
+export function prepareRound(player: Player, dealer: Dealer): void {
+  player.clearHand();
+  dealer.clearHand();
   deck = createDeck();
   deck = shuffle(deck);
   gameState.chips -= blackjackSettings.bet;

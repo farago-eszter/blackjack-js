@@ -30,15 +30,12 @@ router.get("/new-game", (req: Request, res: Response) => {
   res.send(gameState);
 });
 router.get("/new-round", (req: Request, res: Response) => {
-  gameState.player.clearHand();
-  gameState.dealer.clearHand();
-  prepareRound();
+  prepareRound(gameState.player, gameState.dealer);
   drawInitialCards(deck, gameState.player, gameState.dealer);
   let gameResult = getBlackjackResult(gameState.player, gameState.dealer);
   if (gameResult?.blackjack) {
     endRound(gameState.player, gameState.dealer, gameResult);
   }
-
   res.send(gameState);
 });
 router.get("/hit", (req: Request, res: Response) => {
