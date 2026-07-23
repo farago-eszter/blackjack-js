@@ -10,6 +10,9 @@ export class Dealer extends Participant {
       .forEach((card) => {
         card.hidden = false;
       });
-    this._scores[1] = this.hand[0].getValue() + this.hand[1].getValue();
+
+    for (let i = 0; i <= this.hand.length - 1; i++) {
+      this._scores[i] = this.hand.slice(0, i + 1).reduce((sum, card) => sum + card.getValue(), 0);
+    }
   }
 }

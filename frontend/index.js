@@ -111,9 +111,9 @@ standButtonElement.onclick = () => {
 
       image.src = `/assets/cards/poker-cards-${hiddenCard.suit}-${hiddenCard.rank}.svg`;
     }
-    await updateView(gameState);
     const dealerScores = gameState.dealer._scores;
-    dealerScoreElement.textContent = String(dealerScores[dealerScores.length - 1]);
+    dealerScoreElement.textContent = String(dealerScores[1]);
+    await updateView(gameState);
     standButtonElement.disabled = false;
     hitButtonElement.disabled = false;
   });
