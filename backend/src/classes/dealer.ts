@@ -12,7 +12,7 @@ export class Dealer extends Participant {
       });
 
     for (let i = 0; i <= this.hand.length - 1; i++) {
-      this._scores[i] = this.hand.slice(0, i + 1).reduce((sum, card) => sum + card.getValue(), 0);
+      this._scores[i] = this.getScore(false, i);
     }
   }
 }

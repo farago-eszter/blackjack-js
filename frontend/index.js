@@ -95,6 +95,16 @@ hitButtonElement.onclick = () => {
   $.get("http://localhost:8000/blackjack/hit", async function (gameState) {
     standButtonElement.disabled = true;
     hitButtonElement.disabled = true;
+    if (!gameState.isRoundActive) {
+      const image = dealerCardsElement.children[1].children[0];
+      if (image) {
+        const hiddenCard = gameState.dealer._hand[1];
+
+        image.src = `/assets/cards/poker-cards-${hiddenCard.suit}-${hiddenCard.rank}.svg`;
+      }
+      const dealerScores = gameState.dealer._scores;
+      dealerScoreElement.textContent = String(dealerScores[1]);
+    }
     await updateView(gameState);
     standButtonElement.disabled = false;
     hitButtonElement.disabled = false;

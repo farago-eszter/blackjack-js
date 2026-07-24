@@ -24,7 +24,7 @@ export abstract class Participant {
     this._scores = [];
   }
 
-  getScore(includeHiddenCards?: boolean): number {
+  getScore(includeHiddenCards?: boolean, toIndex?: number): number {
     let value = 0;
     let aceCounter = 0;
     let cards;
@@ -32,6 +32,9 @@ export abstract class Participant {
       cards = this.hand.filter((card) => !card.hidden);
     } else {
       cards = this.hand;
+    }
+    if (toIndex) {
+      cards = cards.slice(0, toIndex + 1);
     }
     for (let card of cards) {
       if (card.rank === "A") {
