@@ -1,5 +1,6 @@
 import { ICard } from "../interfaces/card.js";
 import { Suit, Rank } from "../types/types.js";
+import values from "../cardValues.json" with { type: "json" };
 
 export class Card implements ICard {
   constructor(
@@ -8,14 +9,6 @@ export class Card implements ICard {
   ) {}
 
   getValue(): number {
-    let value;
-    if (this.rank === "A") {
-      value = 11;
-    } else if (["J", "Q", "K"].includes(this.rank)) {
-      value = 10;
-    } else {
-      value = Number(this.rank);
-    }
-    return value;
+    return values[this.rank];
   }
 }
