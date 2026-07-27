@@ -35,7 +35,7 @@ paths:
       description: |
         Returns all pets
       operationId: getPets
-        api/controllers/pets.controller
+      x-eov-operation-handler: api/controllers/pets.controller
       parameters:
         - name: type
           in: query

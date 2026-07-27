@@ -7,7 +7,7 @@ export interface Pet {
   tags: string[];
 }
 
-let pets: Pet[] = [
+export let pets: Pet[] = [
   {
     id: 1,
     name: "sparky",
@@ -24,46 +24,36 @@ let pets: Pet[] = [
     id: 3,
     name: "max",
     type: "dog",
-    tags: [],
+    tags: ["sweet", "purrfect", "white"],
   },
 ];
 let creationId: number = 4;
 
-function getPets(req: Request, res: Response) {
+export function getPets(req: Request, res: Response) {
   const type = String(req.query.type);
   const limit = Number(req.query.limit);
   const tags = req.query.tags as string[] | undefined;
-  let result;
-  if (tags) {
-    result = pets.filter((pet) => pet.type === type && pet.tags == tags).slice(0, limit);
-  } else {
-    result = pets.filter((pet) => pet.type === type).slice(0, limit);
-  }
+  const result = pets
+    .filter((pet) => pet.type === type && (!tags || tags.every((tag) => pet.tags.includes(tag))))
+    .slice(0, limit);
 
   res.json(result);
 }
 
-function createPet(req: Request, res: Response) {
+export function createPet(req: Request, res: Response) {
   const newPet = { ...req.body, id: creationId++ };
   pets.push(newPet);
   res.json(newPet);
 }
 
-function findPetById(req: Request, res: Response) {
+export function findPetById(req: Request, res: Response) {
   const id: number = Number(req.params.id);
   const pet = pets.find((pet) => pet.id === id);
   pet ? res.json(pet) : res.status(404).json({ message: "not found" });
 }
 
-function deletePet(req: Request, res: Response) {
+export function deletePet(req: Request, res: Response) {
   const id: number = Number(req.params.id);
   pets = pets.filter((pet) => pet.id !== id);
   res.status(204).end();
 }
-
-module.exports = {
-  getPets,
-  createPet,
-  findPetById,
-  deletePet,
-};

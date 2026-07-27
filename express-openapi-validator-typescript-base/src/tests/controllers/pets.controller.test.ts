@@ -1,7 +1,7 @@
 import { expect } from "chai";
 import axios from "axios";
 import "../../app";
-import { Pet } from "../../api/controllers/pets.controller";
+import { Pet, pets } from "../../api/controllers/pets.controller";
 
 describe("Pets controller", function () {
   const instance = axios.create({
@@ -12,27 +12,28 @@ describe("Pets controller", function () {
   describe("GET /pets", function () {
     it("should return 200.", async () => {
       const response = await instance.get("/pets?type=cat&limit=2");
-
       expect(response.status).to.equal(200);
     });
 
     it("should return cats when type parameter is cat", async () => {
-      const response = await instance.get("/pets?type=cat&limit=2");
+      const response = await instance.get("/pets?type=cat&limit=10");
       const pets = response.data;
 
-      expect(pets.some((pet: Pet) => pet.type !== "cat")).to.be.false;
+      expect(pets.every((pet: Pet) => pet.type === "cat")).to.be.true;
     });
 
     it("should return only one pet when limit parameter is one", async () => {
+      expect(pets.filter((pet) => pet.type === "dog").length).to.be.greaterThan(1);
       const response = await instance.get("/pets?type=dog&limit=1");
 
       expect(response.data.length).to.equal(1);
     });
-    it("should return pets with tag given in parameter", async () => {
-      const response = await instance.get("/pets?type=dog&limit=10&tags=sweet");
+    it("should return pets containing all given tags", async () => {
+      const response = await instance.get("/pets?type=dog&limit=10&tags=sweet&tags=purrfect");
       const pets = response.data;
+      const tags = ["sweet", "purrfect"];
 
-      expect(pets.some((pet: Pet) => !pet.tags.includes("sweet"))).to.be.false;
+      expect(pets.every((pet: Pet) => tags.every((tag) => pet.tags.includes(tag)))).to.be.true;
     });
   });
   describe("POST /pets", function () {
