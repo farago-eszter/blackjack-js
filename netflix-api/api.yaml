@@ -14,7 +14,7 @@ tags:
     description: Endpoints for administrative actions.
 
 paths:
-  /user/register:
+  /user:
     post:
       tags:
         - public
