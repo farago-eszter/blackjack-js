@@ -377,78 +377,61 @@ components:
           type: string
           description: The password of the user attempting to log in.
 
+    VideoBase:
+      title: VideoBase
+      description: Common properties of a video.
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: number
+          description: The unique identifier of the video.
+        title:
+          type: string
+          description: The title of the video.
+        description:
+          type: string
+          description: A short description of the video's content.
+        imgUrl:
+          type: string
+          description: The URL of the image associated with the video.
+        type:
+          type: string
+          description: The type of the video.
+          enum:
+            - tv show
+            - movie
+        categories:
+          type: array
+          description: The categories associated with the video.
+          items:
+            type: string
+        releaseYear:
+          type: number
+          description: The year in which the video was released.
+
     Video:
       title: Video
-      description: Represents a Video.
-      type: object
-      required:
-        - id
-        - title
-        - description
-        - imgUrl
-        - type
-        - categories
-        - releaseYear
-      properties:
-        id:
-          readOnly: true
-          type: number
-          description: The unique identifier of the video.
-        title:
-          type: string
-          description: The title of the video.
-        description:
-          type: string
-          description: A short description of the video's content.
-        imgUrl:
-          type: string
-          description: The URL of the image associated with the video.
-        type:
-          type: string
-          description: The type of the video.
-          enum:
-            - tv show
-            - movie
-        categories:
-          type: array
-          description: The categories associated with the video.
-          items:
-            type: string
-        releaseYear:
-          type: number
-          description: The year in which the video was released.
+      description: Represents a complete video.
+      allOf:
+        - $ref: "#/components/schemas/VideoBase"
+        - type: object
+          required:
+            - id
+            - title
+            - description
+            - imgUrl
+            - type
+            - categories
+            - releaseYear
+
     UpdatedVideo:
-      title: Video
-      description: Represents a Video.
-      type: object
-      properties:
-        id:
-          readOnly: true
-          type: number
-          description: The unique identifier of the video.
-        title:
-          type: string
-          description: The title of the video.
-        description:
-          type: string
-          description: A short description of the video's content.
-        imgUrl:
-          type: string
-          description: The URL of the image associated with the video.
-        type:
-          type: string
-          description: The type of the video.
-          enum:
-            - tv show
-            - movie
-        categories:
-          type: array
-          description: The categories associated with the video.
-          items:
-            type: string
-        releaseYear:
-          type: number
-          description: The year in which the video was released.
+      title: UpdatedVideo
+      description: Represents the fields that can be updated.
+      allOf:
+        - $ref: "#/components/schemas/VideoBase"
+        - type: object
+          minProperties: 1
 
     Error:
       description: Represents an error returned by the API.
