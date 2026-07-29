@@ -33,7 +33,7 @@ export abstract class Participant {
     } else {
       cards = this.hand;
     }
-    if (toIndex) {
+    if (toIndex !== undefined) {
       cards = cards.slice(0, toIndex + 1);
     }
     for (let card of cards) {

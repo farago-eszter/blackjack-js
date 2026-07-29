@@ -1,3 +1,4 @@
+import { GameState } from "./../interfaces/gameState";
 import { Dealer } from "./../classes/dealer";
 import { deck, deckUtils } from "./../index";
 import { expect } from "chai";
@@ -108,20 +109,15 @@ describe("Blackjack tests", () => {
       const spy = sinon.spy(gameState.player, "addCard");
       await instance.get("/hit");
       expect(spy.calledOnce).to.be.true;
+      spy.restore();
     });
   });
   describe("get /stand", () => {
     beforeEach(() => {
-      const player = new Player();
-      player.addCard(card("7"));
-      player.addCard(card("7"));
-      const dealer = new Dealer();
-      dealer.addCard(card("7"));
-      dealer.addCard(card("7"));
       deck.push(card("7"));
       setGameState({
-        player,
-        dealer,
+        player: new Player(),
+        dealer: new Dealer(),
         chips: blackjackSettings.startingChips,
         chipsValue: blackjackSettings.startingChips * blackjackSettings.chipValue,
         isRoundActive: true,
@@ -132,10 +128,27 @@ describe("Blackjack tests", () => {
 
       expect(response.status).to.equal(200);
     });
-    it("should draw cards until the dealer has at least 17 points", async () => {
+    it("should draw a card when the dealer has 16 points", async () => {
+      gameState.player.addCard(card("7"));
+      gameState.player.addCard(card("7"));
+      gameState.dealer.addCard(card("10"));
+      gameState.dealer.addCard(card("6"));
+      const spy = sinon.spy(gameState.dealer, "addCard");
       const response = await instance.get("/stand");
       const scores = response.data.dealer._scores;
+      expect(spy.calledOnce).to.be.true;
       expect(scores[scores.length - 1]).to.be.greaterThanOrEqual(17);
+      spy.restore();
+    });
+    it("should not draw card when the dealer has 17 points", async () => {
+      gameState.player.addCard(card("7"));
+      gameState.player.addCard(card("7"));
+      gameState.dealer.addCard(card("10"));
+      gameState.dealer.addCard(card("7"));
+      const spy = sinon.spy(gameState.dealer, "addCard");
+      await instance.get("/stand");
+      expect(spy.called).to.be.false;
+      spy.restore();
     });
   });
 });
