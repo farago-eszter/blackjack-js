@@ -11,31 +11,33 @@ export let deck: BlackjackCard[] = [];
 export function prepareRound(player: Player, dealer: Dealer): void {
   player.clearHand();
   dealer.clearHand();
-  deck = createDeck();
-  deck = shuffle(deck);
+  deck = deckUtils.createDeck();
+  deck = deckUtils.shuffle(deck);
   gameState.chips -= blackjackSettings.bet;
   gameState.chipsValue = gameState.chips * blackjackSettings.chipValue;
   delete gameState.message;
   gameState.isRoundActive = true;
 }
 
-function createDeck(): BlackjackCard[] {
-  const deck = [];
-  for (let suit of suits) {
-    for (let rank of ranks) {
-      deck.push(new BlackjackCard(rank, suit, false));
+export const deckUtils = {
+  createDeck(): BlackjackCard[] {
+    const deck = [];
+    for (let suit of suits) {
+      for (let rank of ranks) {
+        deck.push(new BlackjackCard(rank, suit, false));
+      }
     }
-  }
-  return deck;
-}
+    return deck;
+  },
 
-function shuffle(deck: BlackjackCard[]): BlackjackCard[] {
-  for (let i = deck.length - 1; i > 0; i--) {
-    const j = Math.floor(Math.random() * (i + 1));
-    [deck[i], deck[j]] = [deck[j], deck[i]];
-  }
-  return deck;
-}
+  shuffle(deck: BlackjackCard[]): BlackjackCard[] {
+    for (let i = deck.length - 1; i > 0; i--) {
+      const j = Math.floor(Math.random() * (i + 1));
+      [deck[i], deck[j]] = [deck[j], deck[i]];
+    }
+    return deck;
+  },
+};
 
 export function drawInitialCards(deck: BlackjackCard[], player: Player, dealer: Dealer): void {
   dealCard(deck, player);

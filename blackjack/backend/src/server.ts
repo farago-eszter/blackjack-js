@@ -61,3 +61,7 @@ app.use((req, res) => {
     message: "Endpoint not found. Please check the API documentation.",
   });
 });
+
+export function setGameState(newGameState: GameState) {
+  gameState = newGameState;
+}

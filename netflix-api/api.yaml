@@ -1,0 +1,444 @@
+openapi: 3.0.0
+
+info:
+  description: Backend API for Netflix.
+  version: 1.0.0
+  title: Netflix API
+
+tags:
+  - name: public
+    description: Public endpoints that can be used by anyone.
+  - name: user
+    description: Endpoints that can be used by users after login.
+  - name: admin
+    description: Endpoints for administrative actions.
+
+paths:
+  /user:
+    post:
+      tags:
+        - public
+      summary: Create user
+      description: Registers a new user in the system.
+      operationId: register
+      x-eov-operation-handler:
+      requestBody:
+        description: User to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/User"
+      responses:
+        "201":
+          description: Successful registration.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/User"
+        "409":
+          description: Conflict.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /user/login:
+    post:
+      tags:
+        - public
+      summary: Logs user into the system
+      description: Authenticates a user and creates a new session.
+      operationId: login
+      x-eov-operation-handler:
+      requestBody:
+        description: User to login.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UserLogin"
+      responses:
+        "201":
+          description: Successful login.
+          content:
+            application/json:
+              schema:
+                type: string
+                description: The session identifier created for the authenticated user.
+        "400":
+          description: Invalid username/password supplied
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /videos:
+    get:
+      tags:
+        - user
+        - admin
+      summary: Find videos
+      description: User can filter videos by title.
+      operationId: getVideos
+      x-eov-operation-handler:
+      security:
+        - userSecurity: []
+        - adminSecurity: []
+      parameters:
+        - name: title
+          in: query
+          description: A keyword that must be included in the video title.
+          schema:
+            type: string
+      responses:
+        "200":
+          description: Successfully got videos.
+          content:
+            application/json:
+              schema:
+                type: array
+                description: A list of videos matching the specified filter.
+                items:
+                  $ref: "#/components/schemas/Video"
+        "401":
+          description: Unauthorized.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    post:
+      tags:
+        - admin
+      summary: Create video
+      description: Creates a new video in the system.
+      operationId: createVideo
+      x-eov-operation-handler:
+      security:
+        - adminSecurity: []
+      requestBody:
+        description: Video object to create.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/Video"
+      responses:
+        "201":
+          description: Successfully created video.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+        "401":
+          description: Unauthorized.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /videos/{id}:
+    patch:
+      tags:
+        - admin
+      summary: Update video
+      description: Updates an existing video identified by its ID.
+      operationId: updateVideo
+      x-eov-operation-handler:
+      security:
+        - adminSecurity: []
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the video to update.
+          required: true
+          schema:
+            type: number
+      requestBody:
+        description: Updated video data.
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/UpdatedVideo"
+      responses:
+        "200":
+          description: Successfully updated video.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Video"
+        "404":
+          description: Video not found.
+        "401":
+          description: Unauthorized.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    delete:
+      tags:
+        - admin
+      summary: Delete video
+      description: Deletes an existing video identified by its ID.
+      operationId: deleteVideo
+      x-eov-operation-handler:
+      security:
+        - adminSecurity: []
+      parameters:
+        - name: id
+          in: path
+          description: The unique identifier of the video to delete.
+          required: true
+          schema:
+            type: number
+      responses:
+        "204":
+          description: No content.
+        "401":
+          description: Unauthorized.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /queue:
+    post:
+      tags:
+        - user
+      summary: Add video to queue
+      description: Adds a video to the authenticated user's queue.
+      operationId: addVideoToQueue
+      x-eov-operation-handler:
+      security:
+        - userSecurity: []
+      requestBody:
+        description: Video id to add.
+        required: true
+        content:
+          application/json:
+            schema:
+              type: string
+              description: The unique identifier of the video to add to the queue.
+      responses:
+        "201":
+          description: Successfully added video to queue.
+          content:
+            application/json:
+              schema:
+                type: array
+                description: The authenticated user's updated video queue.
+                items:
+                  $ref: "#/components/schemas/Video"
+        "400":
+          description: Video with id does not exist.
+        "401":
+          description: Unauthorized.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+    get:
+      tags:
+        - user
+      summary: Get user queue
+      description: Returns the videos in the authenticated user's queue.
+      operationId: getQueue
+      x-eov-operation-handler:
+      security:
+        - userSecurity: []
+      parameters:
+        - name: order
+          in: query
+          description: Sort order of the returned videos.
+          schema:
+            type: string
+            description: The direction in which the videos are sorted.
+            enum:
+              - asc
+              - desc
+      responses:
+        "200":
+          description: Successfully got queue.
+          content:
+            application/json:
+              schema:
+                type: array
+                description: A list of videos in the authenticated user's queue.
+                items:
+                  $ref: "#/components/schemas/Video"
+        "401":
+          description: Unauthorized.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+  /user/logout:
+    post:
+      tags:
+        - user
+      summary: Logs out user
+      description: Ends the authenticated user's current session.
+      operationId: logout
+      x-eov-operation-handler:
+      security:
+        - userSecurity: []
+      responses:
+        "200":
+          description: Successful logout.
+        "401":
+          description: Unauthorized.
+        default:
+          description: Unexpected error.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
+
+components:
+  securitySchemes:
+    userSecurity:
+      type: apiKey
+      description: Session ID used to authenticate a logged-in user.
+      name: X-Session-ID
+      in: header
+
+    adminSecurity:
+      type: apiKey
+      description: API key used to authorize admin user.
+      name: X-Admin-API-key
+      in: header
+
+  schemas:
+    User:
+      title: User
+      description: A User who is watching movies.
+      type: object
+      required:
+        - id
+        - username
+        - firstName
+        - lastName
+        - email
+        - password
+      properties:
+        id:
+          readOnly: true
+          type: number
+          description: The unique identifier of the user.
+        username:
+          type: string
+          description: The unique username of the user.
+        firstName:
+          type: string
+          description: The user's first name.
+        lastName:
+          type: string
+          description: The user's last name.
+        email:
+          type: string
+          description: The user's email address.
+        password:
+          type: string
+          description: The user's password.
+
+    UserLogin:
+      title: Login Credentials
+      description: Login credetials of a User.
+      type: object
+      required:
+        - password
+        - username
+      properties:
+        username:
+          type: string
+          description: The username of the user attempting to log in.
+        password:
+          type: string
+          description: The password of the user attempting to log in.
+
+    VideoBase:
+      title: VideoBase
+      description: Common properties of a video.
+      type: object
+      properties:
+        id:
+          readOnly: true
+          type: number
+          description: The unique identifier of the video.
+        title:
+          type: string
+          description: The title of the video.
+        description:
+          type: string
+          description: A short description of the video's content.
+        imgUrl:
+          type: string
+          description: The URL of the image associated with the video.
+        type:
+          type: string
+          description: The type of the video.
+          enum:
+            - tv show
+            - movie
+        categories:
+          type: array
+          description: The categories associated with the video.
+          items:
+            type: string
+        releaseYear:
+          type: number
+          description: The year in which the video was released.
+
+    Video:
+      title: Video
+      description: Represents a complete video.
+      allOf:
+        - $ref: "#/components/schemas/VideoBase"
+        - type: object
+          required:
+            - id
+            - title
+            - description
+            - imgUrl
+            - type
+            - categories
+            - releaseYear
+
+    UpdatedVideo:
+      title: UpdatedVideo
+      description: Represents the fields that can be updated.
+      allOf:
+        - $ref: "#/components/schemas/VideoBase"
+        - type: object
+          minProperties: 1
+
+    Error:
+      description: Represents an error returned by the API.
+      type: object
+      required:
+        - message
+      properties:
+        message:
+          type: string
+          description: A readable description of the error.
