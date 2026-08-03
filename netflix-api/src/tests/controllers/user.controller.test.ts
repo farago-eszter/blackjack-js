@@ -10,7 +10,9 @@ import { createAuthenticatedUser, createTestVideo } from "../test-helper";
 describe("User controller", function () {
   const instance = axios.create({
     baseURL: "http://localhost:3000/netflix",
-    validateStatus: undefined,
+    validateStatus: (status) => {
+      return (status >= 200 && status < 300) || status == 401 || status == 400 || status == 500;
+    },
   });
   beforeEach(() => {
     videoRepository.clear();
@@ -67,7 +69,7 @@ describe("User controller", function () {
   describe("POST /queue", () => {
     let video1: Video;
     let sessionId: string;
-    let userId: number;
+    let userId: string;
     beforeEach(() => {
       video1 = createTestVideo("Avatar", VideoType.movie, ["Action"], 2009);
       ({ sessionId, userId } = createAuthenticatedUser());
@@ -118,7 +120,7 @@ describe("User controller", function () {
     let video1: Video;
     let video2: Video;
     let sessionId: string;
-    let userId: number;
+    let userId: string;
     beforeEach(() => {
       video1 = createTestVideo("Avatar", VideoType.movie, ["Action"], 2009);
 
@@ -141,7 +143,7 @@ describe("User controller", function () {
       expect(response.data).to.deep.equal([video1, video2]);
     });
     it("should remove the video from the queue when the video with the given ID does not exist anymore", async () => {
-      queueRepository.add(userId, 10);
+      queueRepository.add(userId, "10");
       const queueLengthBeforeCall = queueRepository.get(userId);
       expect(queueLengthBeforeCall).to.have.lengthOf(3);
       const response = await instance.get("/queue", {

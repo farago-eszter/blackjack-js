@@ -1,11 +1,11 @@
 class QueueRepository {
-  queues: Map<number, number[]> = new Map();
+  queues: Map<string, string[]> = new Map();
 
-  insert(userId: number): void {
+  insert(userId: string): void {
     this.queues.set(userId, []);
   }
 
-  add(userId: number, videoId: number): number[] {
+  add(userId: string, videoId: string): string[] {
     if (this.queues.has(userId)) {
       const queue = this.queues.get(userId);
       this.queues.set(userId, [...queue!, videoId]);
@@ -15,7 +15,7 @@ class QueueRepository {
     }
   }
 
-  get(userId: number): number[] {
+  get(userId: string): string[] {
     if (this.queues.has(userId)) {
       const queue = this.queues.get(userId);
       return queue!;
@@ -23,7 +23,7 @@ class QueueRepository {
       throw new Error("Queue does not exist for user: " + userId);
     }
   }
-  remove(userId: number, videoId: number): number[] {
+  remove(userId: string, videoId: string): string[] {
     let queue = this.queues.get(userId)!;
     queue = queue?.filter((id) => id !== videoId);
     this.queues.set(userId, queue);

@@ -10,7 +10,7 @@ export function getVideos(req: Request, res: Response) {
   res.json(videos);
 }
 export function addVideoToQueue(req: Request, res: Response) {
-  const videoId = Number(req.body.videoId);
+  const videoId = req.body.videoId;
   try {
     videoRepository.findById(videoId);
   } catch (error: any) {
@@ -40,7 +40,7 @@ export function logout(req: Request, res: Response) {
   res.json();
 }
 
-function findQueuedVideo(userId: number, videoId: number): Video[] {
+function findQueuedVideo(userId: string, videoId: string): Video[] {
   try {
     return [videoRepository.findById(videoId)];
   } catch {

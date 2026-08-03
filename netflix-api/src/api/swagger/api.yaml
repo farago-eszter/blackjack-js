@@ -163,7 +163,7 @@ paths:
           description: The unique identifier of the video to update.
           required: true
           schema:
-            type: number
+            type: string
       requestBody:
         description: Updated video data.
         required: true
@@ -204,7 +204,7 @@ paths:
           description: The unique identifier of the video to delete.
           required: true
           schema:
-            type: number
+            type: string
       responses:
         "204":
           description: No content.
@@ -238,7 +238,7 @@ paths:
                 - videoId
               properties:
                 videoId:
-                  type: number
+                  type: string
                   description: The unique identifier of the video to add to the queue.
       responses:
         "201":
@@ -351,7 +351,7 @@ components:
       properties:
         id:
           readOnly: true
-          type: number
+          type: string
           description: The unique identifier of the user.
         username:
           type: string
@@ -393,7 +393,7 @@ components:
       properties:
         id:
           readOnly: true
-          type: number
+          type: string
           description: The unique identifier of the video.
         title:
           type: string

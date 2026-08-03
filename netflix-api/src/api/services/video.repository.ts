@@ -1,5 +1,7 @@
+import { randomUUID } from "crypto";
+
 export interface Video {
-  id?: number;
+  id?: string;
   title: string;
   description: string;
   imgUrl: string;
@@ -13,14 +15,16 @@ export enum VideoType {
 }
 
 class VideoRepository {
-  videos: Map<number, Video> = new Map();
-  counter: number = 1;
+  videos: Map<string, Video> = new Map();
 
   insert(video: Video): Video {
-    const id = this.counter++;
+    const id = this.generateId();
     const newVideo = { id, ...video };
     this.videos.set(id, newVideo);
     return newVideo;
+  }
+  generateId(): string {
+    return randomUUID();
   }
 
   findMany(title?: string): Video[] {
@@ -33,7 +37,7 @@ class VideoRepository {
     }
   }
 
-  findById(id: number): Video {
+  findById(id: string): Video {
     const video = this.videos.get(id);
     if (video) {
       return video;
@@ -42,7 +46,7 @@ class VideoRepository {
     }
   }
 
-  update(id: number, partialVideo: Partial<Video>): Video | undefined {
+  update(id: string, partialVideo: Partial<Video>): Video | undefined {
     const videoToUpdate = this.videos.get(id);
     if (videoToUpdate) {
       return { ...videoToUpdate, ...partialVideo };
@@ -51,12 +55,11 @@ class VideoRepository {
     }
   }
 
-  delete(id: number): void {
+  delete(id: string): void {
     this.videos.delete(id);
   }
   clear(): void {
     this.videos.clear();
-    this.counter = 1;
   }
 }
 

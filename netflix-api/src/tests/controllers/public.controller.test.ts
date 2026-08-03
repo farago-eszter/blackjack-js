@@ -8,7 +8,9 @@ import sinon from "sinon";
 describe("Public controller", function () {
   const instance = axios.create({
     baseURL: "http://localhost:3000/netflix",
-    validateStatus: undefined,
+    validateStatus: (status) => {
+      return (status >= 200 && status < 300) || status == 400 || status == 409;
+    },
   });
   beforeEach(() => {
     userRepository.clear();

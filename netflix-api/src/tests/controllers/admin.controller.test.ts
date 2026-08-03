@@ -7,7 +7,9 @@ import { createTestVideo } from "../test-helper";
 describe("Admin controller", function () {
   const instance = axios.create({
     baseURL: "http://localhost:3000/netflix",
-    validateStatus: undefined,
+    validateStatus: (status) => {
+      return (status >= 200 && status < 300) || status == 404 || status == 401;
+    },
   });
   beforeEach(() => {
     videoRepository.clear();
@@ -28,6 +30,7 @@ describe("Admin controller", function () {
         },
       });
       const createdVideo = response.data;
+
       expect(response.status).to.equal(201);
       expect(createdVideo.title).to.equal(reqBody.title);
       expect(createdVideo.description).to.equal(reqBody.description);

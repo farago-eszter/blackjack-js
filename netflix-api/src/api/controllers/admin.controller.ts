@@ -8,7 +8,7 @@ export function createVideo(req: Request, res: Response) {
 }
 
 export function updateVideo(req: Request, res: Response) {
-  const id = Number(req.params.id);
+  const id = req.params.id;
   const videoToUpdate = req.body;
   const updatedVideo = videoRepository.update(id, videoToUpdate);
   if (updatedVideo) {
@@ -19,7 +19,7 @@ export function updateVideo(req: Request, res: Response) {
 }
 
 export function deleteVideo(req: Request, res: Response) {
-  const id = Number(req.params.id);
+  const id = req.params.id;
   videoRepository.delete(id);
   res.status(204).json();
 }
