@@ -21,7 +21,7 @@ describe("Admin controller", function () {
       categories: ["Action"],
       releaseYear: 2009,
     };
-    it("should return the created video with id", async () => {
+    it("should return the created video with id when video creation was successful", async () => {
       const response = await instance.post("/videos", reqBody, {
         headers: {
           "X-Admin-API-key": "my-secret-admin-key",

@@ -140,7 +140,7 @@ describe("User controller", function () {
       expect(response.data).to.have.lengthOf(2);
       expect(response.data).to.deep.equal([video1, video2]);
     });
-    it("should remove not existing video from queue", async () => {
+    it("should remove the video from the queue when the video with the given ID does not exist anymore", async () => {
       queueRepository.add(userId, 10);
       const queueLengthBeforeCall = queueRepository.get(userId);
       expect(queueLengthBeforeCall).to.have.lengthOf(3);
