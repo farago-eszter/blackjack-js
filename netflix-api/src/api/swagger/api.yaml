@@ -67,8 +67,15 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                description: The session identifier created for the authenticated user.
+                type: object
+                additionalProperties: false
+                required:
+                  - sessionId
+                properties:
+                  sessionId:
+                    type: string
+                    description: The session identifier created for the authenticated user.
+
         "400":
           description: Invalid username/password supplied
         default:

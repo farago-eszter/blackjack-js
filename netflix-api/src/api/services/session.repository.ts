@@ -1,9 +1,9 @@
-import { randomUUID } from "crypto";
+import { utils } from "../helpers/utils";
 
 class SessionRepository {
   sessions: Map<string, string[]> = new Map();
   insert(userId: string): string {
-    const sessionId = this.generateSessionId();
+    const sessionId = utils.generateId();
     if (this.sessions.has(userId)) {
       const userSessions = this.sessions.get(userId)!;
       userSessions.push(sessionId);
@@ -12,10 +12,6 @@ class SessionRepository {
       this.sessions.set(userId, [sessionId]);
     }
     return sessionId;
-  }
-
-  generateSessionId(): string {
-    return randomUUID();
   }
 
   findBySessionId(sessionId: string): string | undefined {

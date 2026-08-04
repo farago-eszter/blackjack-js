@@ -4,6 +4,7 @@ import "../../app";
 import { userRepository } from "../../api/services/user.repository";
 import { sessionRepository } from "../../api/services/session.repository";
 import sinon from "sinon";
+import { utils } from "../../api/helpers/utils";
 
 describe("Public controller", function () {
   const instance = axios.create({
@@ -90,7 +91,7 @@ describe("Public controller", function () {
       });
       const credentials = { username: "valaki", password: "password" };
       const response = await instance.post("/user/login", credentials);
-      const sessionId = response.data;
+      const sessionId = response.data.sessionId;
       expect(response.status).to.equal(201);
       expect(sessionId).to.exist;
       expect(sessionId).to.be.a("string");
@@ -106,11 +107,12 @@ describe("Public controller", function () {
         password: "password",
       });
       const credentials = { username: "valaki", password: "password" };
-      const sessionIdStub = sinon.stub(sessionRepository, "generateSessionId").returns("ses-sion-Id-St-ub");
+      const sessionIdStub = sinon.stub(utils, "generateId").returns("ses-sion-Id-St-ub");
       const response = await instance.post("/user/login", credentials);
-      const sessionId = response.data;
+      const sessionId = response.data.sessionId;
       expect(response.status).to.equal(201);
       expect(sessionId).to.equal("ses-sion-Id-St-ub");
+      sessionIdStub.restore();
     });
     it("should return 400 Bad Request if the username is invalid", async () => {
       const user = userRepository.insert({

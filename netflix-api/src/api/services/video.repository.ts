@@ -1,4 +1,4 @@
-import { randomUUID } from "crypto";
+import { utils } from "../helpers/utils";
 
 export interface Video {
   id?: string;
@@ -18,13 +18,10 @@ class VideoRepository {
   videos: Map<string, Video> = new Map();
 
   insert(video: Video): Video {
-    const id = this.generateId();
+    const id = utils.generateId();
     const newVideo = { id, ...video };
     this.videos.set(id, newVideo);
     return newVideo;
-  }
-  generateId(): string {
-    return randomUUID();
   }
 
   findMany(title?: string): Video[] {

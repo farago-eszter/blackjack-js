@@ -19,7 +19,7 @@ export function login(req: Request, res: Response) {
   const user = userRepository.findUserByUsernameAndPassword(loginCredentials.username, loginCredentials.password);
   if (user) {
     const sessionId = sessionRepository.insert(user.id!);
-    res.status(201).json(sessionId);
+    res.status(201).json({ sessionId: sessionId });
   } else {
     res.status(400).json();
   }
