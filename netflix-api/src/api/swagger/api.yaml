@@ -12,7 +12,8 @@ tags:
     description: Endpoints that can be used by users after login.
   - name: admin
     description: Endpoints for administrative actions.
-
+servers:
+  - url: /netflix
 paths:
   /user:
     post:
@@ -21,7 +22,7 @@ paths:
       summary: Create user
       description: Registers a new user in the system.
       operationId: register
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/public.controller
       requestBody:
         description: User to create.
         required: true
@@ -52,7 +53,7 @@ paths:
       summary: Logs user into the system
       description: Authenticates a user and creates a new session.
       operationId: login
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/public.controller
       requestBody:
         description: User to login.
         required: true
@@ -66,8 +67,15 @@ paths:
           content:
             application/json:
               schema:
-                type: string
-                description: The session identifier created for the authenticated user.
+                type: object
+                additionalProperties: false
+                required:
+                  - sessionId
+                properties:
+                  sessionId:
+                    type: string
+                    description: The session identifier created for the authenticated user.
+
         "400":
           description: Invalid username/password supplied
         default:
@@ -85,7 +93,7 @@ paths:
       summary: Find videos
       description: User can filter videos by title.
       operationId: getVideos
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/user.controller
       security:
         - userSecurity: []
         - adminSecurity: []
@@ -120,7 +128,7 @@ paths:
       summary: Create video
       description: Creates a new video in the system.
       operationId: createVideo
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/admin.controller
       security:
         - adminSecurity: []
       requestBody:
@@ -153,7 +161,7 @@ paths:
       summary: Update video
       description: Updates an existing video identified by its ID.
       operationId: updateVideo
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/admin.controller
       security:
         - adminSecurity: []
       parameters:
@@ -162,7 +170,7 @@ paths:
           description: The unique identifier of the video to update.
           required: true
           schema:
-            type: number
+            type: string
       requestBody:
         description: Updated video data.
         required: true
@@ -194,7 +202,7 @@ paths:
       summary: Delete video
       description: Deletes an existing video identified by its ID.
       operationId: deleteVideo
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/admin.controller
       security:
         - adminSecurity: []
       parameters:
@@ -203,7 +211,7 @@ paths:
           description: The unique identifier of the video to delete.
           required: true
           schema:
-            type: number
+            type: string
       responses:
         "204":
           description: No content.
@@ -223,7 +231,7 @@ paths:
       summary: Add video to queue
       description: Adds a video to the authenticated user's queue.
       operationId: addVideoToQueue
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/user.controller
       security:
         - userSecurity: []
       requestBody:
@@ -232,8 +240,13 @@ paths:
         content:
           application/json:
             schema:
-              type: string
-              description: The unique identifier of the video to add to the queue.
+              type: object
+              required:
+                - videoId
+              properties:
+                videoId:
+                  type: string
+                  description: The unique identifier of the video to add to the queue.
       responses:
         "201":
           description: Successfully added video to queue.
@@ -261,7 +274,7 @@ paths:
       summary: Get user queue
       description: Returns the videos in the authenticated user's queue.
       operationId: getQueue
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/user.controller
       security:
         - userSecurity: []
       parameters:
@@ -300,7 +313,7 @@ paths:
       summary: Logs out user
       description: Ends the authenticated user's current session.
       operationId: logout
-      x-eov-operation-handler:
+      x-eov-operation-handler: api/controllers/user.controller
       security:
         - userSecurity: []
       responses:
@@ -341,10 +354,11 @@ components:
         - lastName
         - email
         - password
+      additionalProperties: false
       properties:
         id:
           readOnly: true
-          type: number
+          type: string
           description: The unique identifier of the user.
         username:
           type: string
@@ -369,6 +383,7 @@ components:
       required:
         - password
         - username
+      additionalProperties: false
       properties:
         username:
           type: string
@@ -381,10 +396,11 @@ components:
       title: VideoBase
       description: Common properties of a video.
       type: object
+      additionalProperties: false
       properties:
         id:
           readOnly: true
-          type: number
+          type: string
           description: The unique identifier of the video.
         title:
           type: string
@@ -416,6 +432,9 @@ components:
       allOf:
         - $ref: "#/components/schemas/VideoBase"
         - type: object
+          properties:
+            id:
+              readOnly: true
           required:
             - id
             - title
