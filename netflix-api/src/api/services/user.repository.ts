@@ -1,5 +1,4 @@
-import { utils } from "../helpers/utils";
-
+import { dbApiClient, mapObjectFromDb } from "../helpers/db-api-helper";
 interface User {
   id?: string;
   username: string;
@@ -9,24 +8,23 @@ interface User {
   password: string;
 }
 class UserRepository {
-  users: Map<string, User> = new Map();
-
-  insert(user: User): User {
-    const existingUser = [...this.users.values()].find((u) => u.username === user.username || u.email === user.email);
-
-    if (existingUser) {
-      throw new Error("User with this username or email already exists.");
-    }
-    const id = utils.generateId();
-    const newUser = { id, ...user };
-    this.users.set(id, newUser);
+  async insert(user: User): Promise<User> {
+    const createdUser = (await dbApiClient.post("/User", user)).data;
+    const newUser = mapObjectFromDb(createdUser);
     return newUser;
   }
-  findUserByUsernameAndPassword(username: string, password: string): User | undefined {
-    return [...this.users.values()].find((user) => user.username === username && user.password === password);
+
+  async findUserByUsernameAndPassword(username: string, password: string): Promise<User | undefined> {
+    const existingUsers = (
+      await dbApiClient.get("/User", {
+        params: { query: { username: username, password: password } },
+      })
+    ).data;
+    return existingUsers.length ? mapObjectFromDb(existingUsers[0]) : undefined;
   }
-  clear(): void {
-    this.users.clear();
+
+  async deleteAll(): Promise<void> {
+    await dbApiClient.delete("/User");
   }
 }
 

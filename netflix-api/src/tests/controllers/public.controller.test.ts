@@ -4,7 +4,6 @@ import "../../app";
 import { userRepository } from "../../api/services/user.repository";
 import { sessionRepository } from "../../api/services/session.repository";
 import sinon from "sinon";
-import { utils } from "../../api/helpers/utils";
 
 describe("Public controller", function () {
   const instance = axios.create({
@@ -13,9 +12,12 @@ describe("Public controller", function () {
       return (status >= 200 && status < 300) || status == 400 || status == 409;
     },
   });
-  beforeEach(() => {
-    userRepository.clear();
+
+  beforeEach(async () => {
+    await userRepository.deleteAll();
+    await sessionRepository.deleteAll();
   });
+
   describe("POST /user", function () {
     it("should return the created user with id", async () => {
       const reqBody = {
@@ -35,6 +37,7 @@ describe("Public controller", function () {
       expect(createdUser.password).to.equal(reqBody.password);
       expect(createdUser.id).to.exist;
     });
+
     it("should return 409 Conflict if the username is already in use", async () => {
       const existingUser = {
         username: "valaki",
@@ -43,7 +46,7 @@ describe("Public controller", function () {
         email: "másvalaki.nagy@gmail.com",
         password: "password",
       };
-      userRepository.insert(existingUser);
+      await userRepository.insert(existingUser);
       const reqBody = {
         username: "valaki",
         firstName: "Valaki",
@@ -54,9 +57,9 @@ describe("Public controller", function () {
       const response = await instance.post("/user", reqBody, {
         validateStatus: () => true,
       });
-
       expect(response.status).to.equal(409);
     });
+
     it("should return 409 Conflict if the email is already in use", async () => {
       const existingUser = {
         username: "másvalaki",
@@ -65,7 +68,7 @@ describe("Public controller", function () {
         email: "valaki.nagy@gmail.com",
         password: "password",
       };
-      userRepository.insert(existingUser);
+      await userRepository.insert(existingUser);
       const reqBody = {
         username: "valaki",
         firstName: "Valaki",
@@ -80,9 +83,10 @@ describe("Public controller", function () {
       expect(response.status).to.equal(409);
     });
   });
+
   describe("POST /user/login", () => {
     it("should return a session ID when the credentials are valid", async () => {
-      const user = userRepository.insert({
+      const user = await userRepository.insert({
         username: "valaki",
         firstName: "Valaki",
         lastName: "Nagy",
@@ -96,10 +100,11 @@ describe("Public controller", function () {
       expect(sessionId).to.exist;
       expect(sessionId).to.be.a("string");
       expect(sessionId).to.be.not.empty;
-      expect(sessionRepository.findBySessionId(sessionId)).to.equal(user.id);
+      expect(await sessionRepository.findBySessionId(sessionId)).to.equal(user.id);
     });
+
     it("should return generated session ID", async () => {
-      const user = userRepository.insert({
+      await userRepository.insert({
         username: "valaki",
         firstName: "Valaki",
         lastName: "Nagy",
@@ -107,15 +112,16 @@ describe("Public controller", function () {
         password: "password",
       });
       const credentials = { username: "valaki", password: "password" };
-      const sessionIdStub = sinon.stub(utils, "generateId").returns("ses-sion-Id-St-ub");
+      const sessionIdStub = sinon.stub(sessionRepository, "generateSessionId").returns("ses-sion-Id-St-ub");
       const response = await instance.post("/user/login", credentials);
       const sessionId = response.data.sessionId;
       expect(response.status).to.equal(201);
       expect(sessionId).to.equal("ses-sion-Id-St-ub");
       sessionIdStub.restore();
     });
+
     it("should return 400 Bad Request if the username is invalid", async () => {
-      const user = userRepository.insert({
+      await userRepository.insert({
         username: "valaki",
         firstName: "Valaki",
         lastName: "Nagy",
@@ -126,8 +132,9 @@ describe("Public controller", function () {
       const response = await instance.post("/user/login", credentials);
       expect(response.status).to.equal(400);
     });
+
     it("should return 400 Bad Request if the password is invalid", async () => {
-      const user = userRepository.insert({
+      await userRepository.insert({
         username: "valaki",
         firstName: "Valaki",
         lastName: "Nagy",
@@ -137,6 +144,16 @@ describe("Public controller", function () {
       const credentials = { username: "valaki", password: "password2" };
       const response = await instance.post("/user/login", credentials);
       expect(response.status).to.equal(400);
+    });
+
+    it("should return 400 Bad Request if user is not found", async () => {
+      const findUserByUsernameAndPasswordStub = sinon
+        .stub(userRepository, "findUserByUsernameAndPassword")
+        .resolves(undefined);
+      const credentials = { username: "valakimás", password: "password" };
+      const response = await instance.post("/user/login", credentials);
+      expect(response.status).to.equal(400);
+      findUserByUsernameAndPasswordStub.restore();
     });
   });
 });

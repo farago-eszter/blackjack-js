@@ -1,37 +1,42 @@
+import { dbApiClient, mapObjectFromDb } from "../helpers/db-api-helper";
+import { Video } from "./video.repository";
+
+interface Queue {
+  userId: string;
+  videoId: string;
+}
 class QueueRepository {
-  queues: Map<string, string[]> = new Map();
-
-  insert(userId: string): void {
-    this.queues.set(userId, []);
+  async add(userId: string, videoId: string): Promise<Video[]> {
+    const body = { userId, videoId };
+    await dbApiClient.post("/Queue", body);
+    const queues = (
+      await dbApiClient.get("/Queue", {
+        params: { query: { userId }, populate: { path: "videoId" } },
+      })
+    ).data;
+    return queues.map((q: any) => mapObjectFromDb(q.videoId));
   }
 
-  add(userId: string, videoId: string): string[] {
-    if (this.queues.has(userId)) {
-      const queue = this.queues.get(userId);
-      this.queues.set(userId, [...queue!, videoId]);
-      return this.queues.get(userId)!;
-    } else {
-      throw new Error("Queue does not exist for user: " + userId);
-    }
+  async get(userId: string, order: string | undefined): Promise<Video[]> {
+    const queues = (
+      await dbApiClient.get("/Queue", {
+        params: { query: { userId }, populate: { path: "videoId" }, sort: { addedAt: order === "desc" ? -1 : 1 } },
+      })
+    ).data;
+    return queues.map((q: any) => mapObjectFromDb(q.videoId));
   }
 
-  get(userId: string): string[] {
-    if (this.queues.has(userId)) {
-      const queue = this.queues.get(userId);
-      return queue!;
-    } else {
-      throw new Error("Queue does not exist for user: " + userId);
-    }
-  }
-  remove(userId: string, videoId: string): string[] {
-    let queue = this.queues.get(userId)!;
-    queue = queue?.filter((id) => id !== videoId);
-    this.queues.set(userId, queue);
-    return queue;
+  async getQueuesByVideoId(videoId: string): Promise<Queue[]> {
+    const queues = (await dbApiClient.get("Queue", { params: { query: { videoId } } })).data;
+    return queues.map((q: any) => mapObjectFromDb(q));
   }
 
-  clear(): void {
-    this.queues.clear();
+  async deleteByVideoId(videoId: string): Promise<void> {
+    await dbApiClient.delete("/Queue", { params: { query: { videoId } } });
+  }
+
+  async deleteAll(): Promise<void> {
+    await dbApiClient.delete("/Queue");
   }
 }
 

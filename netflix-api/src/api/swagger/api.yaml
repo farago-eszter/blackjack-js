@@ -187,6 +187,10 @@ paths:
                 $ref: "#/components/schemas/Video"
         "404":
           description: Video not found.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
           description: Unauthorized.
         default:
@@ -259,6 +263,10 @@ paths:
                   $ref: "#/components/schemas/Video"
         "400":
           description: Video with id does not exist.
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/Error"
         "401":
           description: Unauthorized.
         default:
@@ -425,6 +433,9 @@ components:
         releaseYear:
           type: number
           description: The year in which the video was released.
+        published:
+          type: boolean
+          description: Indicates whether the video is publicly available to users or accessible only to administrators.
 
     Video:
       title: Video
@@ -443,6 +454,7 @@ components:
             - type
             - categories
             - releaseYear
+            - published
 
     UpdatedVideo:
       title: UpdatedVideo
