@@ -4,9 +4,9 @@ import { queueRepository } from "../services/queue.repository";
 import { sessionRepository } from "../services/session.repository";
 
 export async function getVideos(req: Request, res: Response) {
-  const published = req.res!.locals.userId ? true : undefined;
+  const isFilteredByPublished = req.res!.locals.userId ? true : false;
   const title = req.query.title as string | undefined;
-  const videos = await videoRepository.findMany(title, published);
+  const videos = await videoRepository.findMany(title, isFilteredByPublished);
   res.json(videos);
 }
 
@@ -25,13 +25,8 @@ export async function getQueue(req: Request, res: Response, next: NextFunction) 
   try {
     const order = String(req.query.order);
     const userId = req.res!.locals.userId;
-    if (order === "desc") {
-      const videos = await queueRepository.get(userId, order);
-      res.json(videos);
-    } else {
-      const videos = await queueRepository.get(userId, order);
-      res.json(videos);
-    }
+    const videos = await queueRepository.get(userId, order);
+    res.json(videos);
   } catch (err) {
     next(err);
   }

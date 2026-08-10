@@ -17,7 +17,7 @@ class QueueRepository {
     return queues.map((q: any) => mapObjectFromDb(q.videoId));
   }
 
-  async get(userId: string, order: string | undefined): Promise<Video[]> {
+  async get(userId: string, order?: string): Promise<Video[]> {
     const queues = (
       await dbApiClient.get("/Queue", {
         params: { query: { userId }, populate: { path: "videoId" }, sort: { addedAt: order === "desc" ? -1 : 1 } },

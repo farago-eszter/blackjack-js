@@ -1,14 +1,17 @@
 import { dbApiClient, mapObjectFromDb } from "../helpers/db-api-helper";
+import { hashPassword } from "../helpers/password-helper";
+
 interface User {
   id?: string;
   username: string;
   firstName: string;
   lastName: string;
   email: string;
-  password: string;
+  password?: string;
 }
 class UserRepository {
   async insert(user: User): Promise<User> {
+    user.password = hashPassword(user.password!);
     const createdUser = (await dbApiClient.post("/User", user)).data;
     const newUser = mapObjectFromDb(createdUser);
     return newUser;

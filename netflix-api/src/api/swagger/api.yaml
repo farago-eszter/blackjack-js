@@ -381,6 +381,7 @@ components:
           type: string
           description: The user's email address.
         password:
+          writeOnly: true
           type: string
           description: The user's password.
 

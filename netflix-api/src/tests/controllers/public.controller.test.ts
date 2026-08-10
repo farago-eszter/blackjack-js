@@ -9,7 +9,7 @@ describe("Public controller", function () {
   const instance = axios.create({
     baseURL: "http://localhost:3000/netflix",
     validateStatus: (status) => {
-      return (status >= 200 && status < 300) || status == 400 || status == 409;
+      return (status >= 200 && status < 300) || status == 400 || status == 409 || status == 500;
     },
   });
 
@@ -29,12 +29,13 @@ describe("Public controller", function () {
       };
       const response = await instance.post("/user", reqBody);
       const createdUser = response.data;
+      console.log(response.data);
       expect(response.status).to.equal(201);
       expect(createdUser.username).to.equal(reqBody.username);
       expect(createdUser.firstName).to.equal(reqBody.firstName);
       expect(createdUser.lastName).to.equal(reqBody.lastName);
       expect(createdUser.email).to.equal(reqBody.email);
-      expect(createdUser.password).to.equal(reqBody.password);
+      expect(createdUser.password).to.not.exist;
       expect(createdUser.id).to.exist;
     });
 

@@ -22,7 +22,7 @@ class VideoRepository {
     return newVideo;
   }
 
-  async findMany(title?: string, published?: boolean): Promise<Video[]> {
+  async findMany(title?: string, isFilteredByPublished?: boolean): Promise<Video[]> {
     if (title) {
       const videos = (
         await dbApiClient.get("/Video", {
@@ -32,14 +32,14 @@ class VideoRepository {
                 $regex: title,
                 $options: "i",
               },
-              published: published,
+              published: isFilteredByPublished ? true : undefined,
             },
           },
         })
       ).data;
       return videos.map((video: any) => mapObjectFromDb(video));
     } else {
-      const videos = (await dbApiClient.get("/Video", { params: { query: { published: published } } })).data;
+      const videos = (await dbApiClient.get("/Video", { params: { query: { published: isFilteredByPublished ? true : undefined } } })).data;
       return videos.map((video: any) => mapObjectFromDb(video));
     }
   }
