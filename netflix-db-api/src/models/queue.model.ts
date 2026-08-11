@@ -26,4 +26,8 @@ const queueSchema = new Schema<Queue>(
   },
 );
 
+queueSchema.index({ userId: 1 });
+queueSchema.index({ videoId: 1 });
+queueSchema.index({ userId: 1, videoId: 1 }, { unique: true });
+
 export const QueueModel = mongoose.model<Queue>("Queue", queueSchema);

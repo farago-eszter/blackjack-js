@@ -1,5 +1,5 @@
 import { dbApiClient, mapObjectFromDb } from "../helpers/db-api-helper";
-import { hashPassword } from "../helpers/password-helper";
+import { hashPassword } from "../helpers/utils";
 
 interface User {
   id?: string;

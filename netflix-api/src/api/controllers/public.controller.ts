@@ -1,7 +1,7 @@
 import { NextFunction, Request, Response } from "express";
 import { userRepository } from "../services/user.repository";
 import { sessionRepository } from "../services/session.repository";
-import { hashPassword } from "../helpers/password-helper";
+import { hashPassword } from "../helpers/utils";
 
 export async function register(req: Request, res: Response, next: NextFunction) {
   try {

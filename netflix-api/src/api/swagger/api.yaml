@@ -262,7 +262,7 @@ paths:
                 items:
                   $ref: "#/components/schemas/Video"
         "400":
-          description: Video with id does not exist.
+          description: Video with id does not exist or already in queue.
           content:
             application/json:
               schema:

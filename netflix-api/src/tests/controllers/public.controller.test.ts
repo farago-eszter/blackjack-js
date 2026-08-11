@@ -29,7 +29,6 @@ describe("Public controller", function () {
       };
       const response = await instance.post("/user", reqBody);
       const createdUser = response.data;
-      console.log(response.data);
       expect(response.status).to.equal(201);
       expect(createdUser.username).to.equal(reqBody.username);
       expect(createdUser.firstName).to.equal(reqBody.firstName);

@@ -47,4 +47,6 @@ const videoSchema = new Schema<Video>({
   },
 });
 
+videoSchema.index({ title: 1 });
+
 export const VideoModel = mongoose.model<Video>("Video", videoSchema);

@@ -74,10 +74,11 @@ describe("User controller", function () {
   describe("POST /queue", () => {
     let video1: Video;
     let sessionId: string;
+    let userId: string;
 
     beforeEach(async () => {
       video1 = await createTestVideo("Avatar", VideoType.movie, ["Action"], 2009, true);
-      ({ sessionId } = await createAuthenticatedUser());
+      ({ sessionId, userId } = await createAuthenticatedUser());
     });
 
     it("should add the video to the authenticated user's queue", async () => {
@@ -91,6 +92,17 @@ describe("User controller", function () {
       expect(response.data).to.be.an("array");
       expect(response.data).to.have.lengthOf(1);
       expect(response.data).to.deep.equal([video1]);
+    });
+
+    it("should return 400 if the video with id is already in queue", async () => {
+      const reqBody = { videoId: video1.id };
+      queueRepository.add(userId, video1.id!);
+      const response = await instance.post("/queue", reqBody, {
+        headers: {
+          "X-Session-ID": sessionId,
+        },
+      });
+      expect(response.status).to.equal(400);
     });
 
     it("should return 400 if the video with id is not found", async () => {
