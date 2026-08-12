@@ -2,7 +2,7 @@
   "name": "express-openapi-validator-typescript-base",
   "version": "1.0.0",
   "scripts": {
-    "start": "npm run build && set DB_NAME=netflix-api && node --trace-warnings ./dist/app.js",
+    "start": "node --trace-warnings ./dist/app.js",
     "start-test": "npm run build && set DB_NAME=test && node --trace-warnings ./dist/app.js",
     "build": "tsc",
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --exit -r ./node_modules/ts-node/register 'src/tests/**/*.ts'",
