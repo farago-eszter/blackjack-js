@@ -19,7 +19,7 @@ restify.serve(app, QueueModel as any);
 
 async function startServer(): Promise<void> {
   try {
-    await mongoose.connect("mongodb://localhost:27017/netflix-api");
+    await mongoose.connect(`mongodb://localhost:27017/${process.env.DB_NAME}`);
 
     console.log("MongoDB connection established");
 

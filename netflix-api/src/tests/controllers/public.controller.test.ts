@@ -9,7 +9,7 @@ describe("Public controller", function () {
   const instance = axios.create({
     baseURL: "http://localhost:3000/netflix",
     validateStatus: (status) => {
-      return (status >= 200 && status < 300) || status == 400 || status == 409 || status == 500;
+      return (status >= 200 && status < 300) || status == 400 || status == 409;
     },
   });
 
