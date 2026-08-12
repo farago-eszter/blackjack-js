@@ -11,29 +11,33 @@ describe("User controller", function () {
   const instance = axios.create({
     baseURL: "http://localhost:3000/netflix",
     validateStatus: (status) => {
-      return (status >= 200 && status < 300) || status == 401 || status == 400 || status == 500;
+      return (status >= 200 && status < 300) || status == 401 || status == 400;
     },
   });
-  beforeEach(() => {
-    videoRepository.clear();
-    sessionRepository.clear();
-    queueRepository.clear();
-    userRepository.clear();
+
+  beforeEach(async () => {
+    await videoRepository.deleteAll();
+    await sessionRepository.deleteAll();
+    await queueRepository.deleteAll();
+    await userRepository.deleteAll();
   });
 
   describe("GET /videos", () => {
     let video1: Video;
     let video2: Video;
+    let video3: Video;
     let sessionId: string;
-    beforeEach(() => {
-      video1 = createTestVideo("Avatar", VideoType.movie, ["Action"], 2009);
 
-      video2 = createTestVideo("Breaking Bad", VideoType.tvShow, ["Drama"], 2008);
+    beforeEach(async () => {
+      video1 = await createTestVideo("Avatar", VideoType.movie, ["Action"], 2009, true);
 
-      sessionId = createAuthenticatedUser().sessionId;
+      video2 = await createTestVideo("Breaking Bad", VideoType.tvShow, ["Drama"], 2008, false);
+      video3 = await createTestVideo("Tha Maze Runner", VideoType.movie, ["Action"], 2014, true);
+
+      sessionId = (await createAuthenticatedUser()).sessionId;
     });
 
-    it("should return all videos when no title filter is provided", async () => {
+    it("should return all published videos when no title filter is provided", async () => {
       const response = await instance.get("/videos", {
         headers: {
           "X-Session-ID": sessionId,
@@ -42,10 +46,10 @@ describe("User controller", function () {
       expect(response.status).to.equal(200);
       expect(response.data).to.be.an("array");
       expect(response.data).to.have.lengthOf(2);
-      expect(response.data).to.deep.equal([video1, video2]);
+      expect(response.data).to.deep.equal([video1, video3]);
     });
 
-    it("should return videos matching the provided title", async () => {
+    it("should return published videos matching the provided title", async () => {
       const response = await instance.get("/videos?title=avatar", {
         headers: {
           "X-Session-ID": sessionId,
@@ -66,15 +70,17 @@ describe("User controller", function () {
       expect(response.status).to.equal(401);
     });
   });
+
   describe("POST /queue", () => {
     let video1: Video;
     let sessionId: string;
     let userId: string;
-    beforeEach(() => {
-      video1 = createTestVideo("Avatar", VideoType.movie, ["Action"], 2009);
-      ({ sessionId, userId } = createAuthenticatedUser());
-      queueRepository.insert(userId);
+
+    beforeEach(async () => {
+      video1 = await createTestVideo("Avatar", VideoType.movie, ["Action"], 2009, true);
+      ({ sessionId, userId } = await createAuthenticatedUser());
     });
+
     it("should add the video to the authenticated user's queue", async () => {
       const reqBody = { videoId: video1.id };
       const response = await instance.post("/queue", reqBody, {
@@ -87,8 +93,10 @@ describe("User controller", function () {
       expect(response.data).to.have.lengthOf(1);
       expect(response.data).to.deep.equal([video1]);
     });
-    it("should return 400 if the video with id is not found", async () => {
-      const reqBody = { videoId: 3 };
+
+    it("should return 400 if the video with id is already in queue", async () => {
+      const reqBody = { videoId: video1.id };
+      queueRepository.add(userId, video1.id!);
       const response = await instance.post("/queue", reqBody, {
         headers: {
           "X-Session-ID": sessionId,
@@ -96,6 +104,17 @@ describe("User controller", function () {
       });
       expect(response.status).to.equal(400);
     });
+
+    it("should return 400 if the video with id is not found", async () => {
+      const reqBody = { videoId: "videoid" };
+      const response = await instance.post("/queue", reqBody, {
+        headers: {
+          "X-Session-ID": sessionId,
+        },
+      });
+      expect(response.status).to.equal(400);
+    });
+
     it("should return 401 Unauthorized if the session ID is invalid", async () => {
       const reqBody = { videoId: video1.id };
       const response = await instance.post("/queue", reqBody, {
@@ -105,32 +124,24 @@ describe("User controller", function () {
       });
       expect(response.status).to.equal(401);
     });
-    it("should return 500 if the user does not have queue", async () => {
-      queueRepository.clear();
-      const reqBody = { videoId: video1.id };
-      const response = await instance.post("/queue", reqBody, {
-        headers: {
-          "X-Session-ID": sessionId,
-        },
-      });
-      expect(response.status).to.equal(500);
-    });
   });
+
   describe("GET /queue", () => {
     let video1: Video;
     let video2: Video;
     let sessionId: string;
     let userId: string;
-    beforeEach(() => {
-      video1 = createTestVideo("Avatar", VideoType.movie, ["Action"], 2009);
 
-      video2 = createTestVideo("Breaking Bad", VideoType.tvShow, ["Drama"], 2008);
+    beforeEach(async () => {
+      video1 = await createTestVideo("Avatar", VideoType.movie, ["Action"], 2009, true);
 
-      ({ sessionId, userId } = createAuthenticatedUser());
-      queueRepository.insert(userId);
-      queueRepository.add(userId, video1.id!);
-      queueRepository.add(userId, video2.id!);
+      video2 = await createTestVideo("Breaking Bad", VideoType.tvShow, ["Drama"], 2008, true);
+
+      ({ sessionId, userId } = await createAuthenticatedUser());
+      await queueRepository.add(userId, video1.id!);
+      await queueRepository.add(userId, video2.id!);
     });
+
     it("should return the queue of the authenticated user", async () => {
       const response = await instance.get("/queue", {
         headers: {
@@ -142,21 +153,7 @@ describe("User controller", function () {
       expect(response.data).to.have.lengthOf(2);
       expect(response.data).to.deep.equal([video1, video2]);
     });
-    it("should remove the video from the queue when the video with the given ID does not exist anymore", async () => {
-      queueRepository.add(userId, "10");
-      const queueLengthBeforeCall = queueRepository.get(userId);
-      expect(queueLengthBeforeCall).to.have.lengthOf(3);
-      const response = await instance.get("/queue", {
-        headers: {
-          "X-Session-ID": sessionId,
-        },
-      });
-      const queueLengthAfterCall = queueRepository.get(userId);
-      expect(response.status).to.equal(200);
-      expect(response.data).to.be.an("array");
-      expect(response.data).to.have.lengthOf(2);
-      expect(queueLengthAfterCall).to.have.lengthOf(2);
-    });
+
     it("should return the authenticated user's queue in descending order", async () => {
       const response = await instance.get("/queue?order=desc", {
         headers: {
@@ -168,6 +165,7 @@ describe("User controller", function () {
       expect(response.data).to.have.lengthOf(2);
       expect(response.data).to.deep.equal([video2, video1]);
     });
+
     it("should return 401 Unauthorized if the session ID is invalid", async () => {
       const response = await instance.get("/queue", {
         headers: {
@@ -176,19 +174,11 @@ describe("User controller", function () {
       });
       expect(response.status).to.equal(401);
     });
-    it("should return 500 if the user does not have queue", async () => {
-      queueRepository.clear();
-      const response = await instance.get("/queue", {
-        headers: {
-          "X-Session-ID": sessionId,
-        },
-      });
-      expect(response.status).to.equal(500);
-    });
   });
+
   describe("POST /user/logout", () => {
     it("should delete the session and return 200 OK", async () => {
-      const sessionId = createAuthenticatedUser().sessionId;
+      const sessionId = (await createAuthenticatedUser()).sessionId;
 
       const response = await instance.post(
         "/user/logout",
@@ -201,8 +191,9 @@ describe("User controller", function () {
       );
       expect(response.status).to.equal(200);
       expect(response.data).to.be.empty;
-      expect(sessionRepository.findBySessionId(sessionId)).to.be.undefined;
+      expect(await sessionRepository.findBySessionId(sessionId)).to.be.undefined;
     });
+
     it("should return 401 Unauthorized if the session ID is invalid", async () => {
       const response = await instance.post(
         "/user/logout",

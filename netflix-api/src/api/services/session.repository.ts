@@ -1,44 +1,29 @@
-import { utils } from "../helpers/utils";
+import { dbApiClient } from "../helpers/db-api-helper";
+import { randomUUID } from "crypto";
 
 class SessionRepository {
-  sessions: Map<string, string[]> = new Map();
-  insert(userId: string): string {
-    const sessionId = utils.generateId();
-    if (this.sessions.has(userId)) {
-      const userSessions = this.sessions.get(userId)!;
-      userSessions.push(sessionId);
-      this.sessions.set(userId, userSessions);
-    } else {
-      this.sessions.set(userId, [sessionId]);
-    }
-    return sessionId;
+  async insert(userId: string): Promise<string> {
+    const sessionId = this.generateSessionId();
+    const body = { userId: userId, sessionId: sessionId };
+    const newSession = (await dbApiClient.post("/Session", body)).data;
+    return newSession.sessionId;
   }
 
-  findBySessionId(sessionId: string): string | undefined {
-    for (const [userId, sessionIds] of this.sessions.entries()) {
-      if (sessionIds.includes(sessionId)) {
-        return userId;
-      }
-    }
-    return undefined;
+  generateSessionId(): string {
+    return randomUUID();
   }
 
-  delete(sessionId: string): void {
-    for (const [userId, sessionIds] of this.sessions.entries()) {
-      const index = sessionIds.indexOf(sessionId);
-      if (index !== -1) {
-        sessionIds.splice(index, 1);
-        if (sessionIds.length === 0) {
-          this.sessions.delete(userId);
-        } else {
-          this.sessions.set(userId, sessionIds);
-        }
-        return;
-      }
-    }
+  async findBySessionId(sessionId: string): Promise<string | undefined> {
+    const sessions = (await dbApiClient.get("/Session", { params: { query: { sessionId: sessionId } } })).data;
+    return sessions.length ? sessions[0].userId : undefined;
   }
-  clear() {
-    this.sessions.clear();
+
+  async delete(sessionId: string): Promise<void> {
+    await dbApiClient.delete("/Session", { params: { query: { sessionId } } });
+  }
+
+  async deleteAll(): Promise<void> {
+    await dbApiClient.delete("/Session");
   }
 }
 

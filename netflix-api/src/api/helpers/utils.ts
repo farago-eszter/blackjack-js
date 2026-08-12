@@ -1,7 +1,5 @@
-import { randomUUID } from "crypto";
+import crypto from "crypto";
 
-export const utils = {
-  generateId(): string {
-    return randomUUID();
-  },
-};
+export function hashPassword(password: string) {
+  return crypto.createHash("sha256").update(password).digest("hex");
+}

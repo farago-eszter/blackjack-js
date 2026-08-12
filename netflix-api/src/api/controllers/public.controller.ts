@@ -1,26 +1,38 @@
-import { Request, Response } from "express";
+import { NextFunction, Request, Response } from "express";
 import { userRepository } from "../services/user.repository";
 import { sessionRepository } from "../services/session.repository";
-import { queueRepository } from "../services/queue.repository";
+import { hashPassword } from "../helpers/utils";
 
-export function register(req: Request, res: Response) {
+export async function register(req: Request, res: Response, next: NextFunction) {
   try {
     const newUser = req.body;
-    const createdUser = userRepository.insert(newUser);
-    queueRepository.insert(createdUser.id!);
+    const createdUser = await userRepository.insert(newUser);
+    delete createdUser.password;
     res.status(201).json(createdUser);
-  } catch (err) {
-    res.status(409).json();
+  } catch (err: any) {
+    if (err.response.status === 400 && err.response.data.message.includes("duplicate key error")) {
+      res.status(409).json();
+    } else {
+      next(err);
+    }
   }
 }
 
-export function login(req: Request, res: Response) {
-  const loginCredentials = req.body;
-  const user = userRepository.findUserByUsernameAndPassword(loginCredentials.username, loginCredentials.password);
-  if (user) {
-    const sessionId = sessionRepository.insert(user.id!);
-    res.status(201).json({ sessionId: sessionId });
-  } else {
-    res.status(400).json();
+export async function login(req: Request, res: Response, next: NextFunction) {
+  try {
+    const loginCredentials = req.body;
+
+    const user = await userRepository.findUserByUsernameAndPassword(
+      loginCredentials.username,
+      hashPassword(loginCredentials.password),
+    );
+    if (user) {
+      const sessionId = await sessionRepository.insert(user.id!);
+      res.status(201).json({ sessionId: sessionId });
+    } else {
+      res.status(400).json();
+    }
+  } catch (err) {
+    next(err);
   }
 }

@@ -1,4 +1,4 @@
-import { utils } from "../helpers/utils";
+import { dbApiClient, mapObjectFromDb } from "../helpers/db-api-helper";
 
 export interface Video {
   id?: string;
@@ -8,6 +8,7 @@ export interface Video {
   type: VideoType;
   categories: string[];
   releaseYear: number;
+  published: boolean;
 }
 export enum VideoType {
   tvShow = "tv show",
@@ -15,48 +16,45 @@ export enum VideoType {
 }
 
 class VideoRepository {
-  videos: Map<string, Video> = new Map();
-
-  insert(video: Video): Video {
-    const id = utils.generateId();
-    const newVideo = { id, ...video };
-    this.videos.set(id, newVideo);
+  async insert(video: Video): Promise<Video> {
+    const createdVideo = (await dbApiClient.post("/Video", video)).data;
+    const newVideo = mapObjectFromDb(createdVideo);
     return newVideo;
   }
 
-  findMany(title?: string): Video[] {
+  async findMany(title?: string, isFilteredByPublished?: boolean): Promise<Video[]> {
     if (title) {
-      return [...this.videos.values()].filter((video) =>
-        video.title.toLocaleLowerCase().includes(title.toLocaleLowerCase()),
-      );
+      const videos = (
+        await dbApiClient.get("/Video", {
+          params: {
+            query: {
+              title: {
+                $regex: title,
+                $options: "i",
+              },
+              published: isFilteredByPublished ? true : undefined,
+            },
+          },
+        })
+      ).data;
+      return videos.map((video: any) => mapObjectFromDb(video));
     } else {
-      return [...this.videos.values()];
+      const videos = (await dbApiClient.get("/Video", { params: { query: { published: isFilteredByPublished ? true : undefined } } })).data;
+      return videos.map((video: any) => mapObjectFromDb(video));
     }
   }
 
-  findById(id: string): Video {
-    const video = this.videos.get(id);
-    if (video) {
-      return video;
-    } else {
-      throw new Error("Video not found.");
-    }
+  async update(id: string, partialVideo: Partial<Video>): Promise<Video> {
+    const updatedVideo = (await dbApiClient.patch(`/Video/${id}`, partialVideo)).data;
+    return mapObjectFromDb(updatedVideo);
   }
 
-  update(id: string, partialVideo: Partial<Video>): Video | undefined {
-    const videoToUpdate = this.videos.get(id);
-    if (videoToUpdate) {
-      return { ...videoToUpdate, ...partialVideo };
-    } else {
-      return undefined;
-    }
+  async delete(id: string): Promise<void> {
+    await dbApiClient.delete(`/Video/${id}`);
   }
 
-  delete(id: string): void {
-    this.videos.delete(id);
-  }
-  clear(): void {
-    this.videos.clear();
+  async deleteAll(): Promise<void> {
+    await dbApiClient.delete("/Video");
   }
 }
 

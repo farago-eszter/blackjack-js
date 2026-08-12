@@ -27,9 +27,9 @@ app.use(
     validateResponses: true,
     validateSecurity: {
       handlers: {
-        userSecurity: (req: Request) => {
+        userSecurity: async (req: Request) => {
           const sessionId = req.headers["x-session-id"];
-          const userId = sessionRepository.findBySessionId(sessionId as string);
+          const userId = await sessionRepository.findBySessionId(sessionId as string);
           req.res!.locals.userId = userId;
           return !!userId;
         },
