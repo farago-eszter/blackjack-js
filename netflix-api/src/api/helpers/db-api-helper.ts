@@ -1,7 +1,7 @@
 import axios from "axios";
 
 export const dbApiClient = axios.create({
-  baseURL: "http://netflix-db-api:4000/api/v1",
+  baseURL: process.env.DB_API_URL,
 });
 
 export function mapObjectFromDb(mongoObject: any) {
