@@ -19,7 +19,10 @@ restify.serve(app, QueueModel as any);
 
 async function startServer(): Promise<void> {
   try {
-    await mongoose.connect(`mongodb://localhost:27017/${process.env.DB_NAME}`);
+    if (!process.env.MONGO_CONNECTION_STRING) {
+      throw new Error("MONGO_CONNECTION_STRING env not provided.");
+    }
+    await mongoose.connect(process.env.MONGO_CONNECTION_STRING);
 
     console.log("MongoDB connection established");
 

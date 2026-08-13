@@ -2,7 +2,7 @@
   "name": "express-openapi-validator-typescript-base",
   "version": "1.0.0",
   "scripts": {
-    "start": "npm run build && node --trace-warnings ./dist/app.js",
+    "start": "node --trace-warnings ./dist/app.js",
     "build": "tsc && ncp ./src/api/swagger ./dist/api/swagger --stopOnErr",
     "test": "env TS_NODE_COMPILER_OPTIONS='{\"module\": \"commonjs\" }' mocha --exit -r ./node_modules/ts-node/register 'src/tests/**/*.ts'",
     "test-win": "set TS_NODE_COMPILER_OPTIONS={\"module\": \"commonjs\" } && mocha --exit -r ./node_modules/ts-node/register \"src/tests/**/*.ts\""
