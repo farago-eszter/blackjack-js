@@ -27,8 +27,12 @@ async function startServer(): Promise<void> {
     console.log("MongoDB connection established");
 
     app.get("/health", async (req: Request, res: Response) => {
-      await UserModel.countDocuments();
-      res.send();
+      try {
+        await UserModel.countDocuments();
+        res.send();
+      } catch {
+        res.status(500).send();
+      }
     });
 
     app.listen(4000, () => {
