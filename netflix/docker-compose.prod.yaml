@@ -1,30 +1,24 @@
+x-logging: &default-logging
+  driver: fluentd
+  options:
+    fluentd-address: localhost:24224
+    fluentd-async: "true"
+
 services:
   netflix-db-api:
     image: faragoeszter/netflix-db-api:1.0.0
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: localhost:24224
-        fluentd-async: "true"
+    logging: *default-logging
     cpus: 0.5
     mem_limit: 256m
 
   netflix-api:
     image: faragoeszter/netflix-api:1.0.0
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: localhost:24224
-        fluentd-async: "true"
+    logging: *default-logging
     cpus: 0.5
     mem_limit: 256m
 
   mongo:
-    logging:
-      driver: fluentd
-      options:
-        fluentd-address: localhost:24224
-        fluentd-async: "true"
+    logging: *default-logging
     cpus: 0.5
     mem_limit: 1g
 

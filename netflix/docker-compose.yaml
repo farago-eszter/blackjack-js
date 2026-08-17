@@ -4,6 +4,9 @@ services:
     container_name: mongo
     networks:
       - netflix
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: mongo
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
   netflix-db-api:
     image: faragoeszter/netflix-db-api:latest
     container_name: netflix-db-api
