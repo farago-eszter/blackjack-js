@@ -19,10 +19,18 @@ restify.serve(app, QueueModel as any);
 
 async function startServer(): Promise<void> {
   try {
-    if (!process.env.MONGO_CONNECTION_STRING) {
-      throw new Error("MONGO_CONNECTION_STRING env not provided.");
+    if (
+      !process.env.MONGO_USERNAME ||
+      !process.env.MONGO_PASSWORD ||
+      !process.env.MONGO_HOST ||
+      !process.env.MONGO_PORT ||
+      !process.env.MONGO_DB_NAME
+    ) {
+      throw new Error("Env not provided for mongo connection.");
     }
-    await mongoose.connect(process.env.MONGO_CONNECTION_STRING);
+    await mongoose.connect(
+      `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB_NAME}?authSource=admin`,
+    );
 
     console.log("MongoDB connection established");
 
