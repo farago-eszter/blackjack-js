@@ -1,3 +1,14 @@
+volumes:
+  kong_db_data: {}
+  mongo_db_data: {}
+
+x-kong-config: &kong-env
+  KONG_DATABASE: postgres
+  KONG_PG_HOST: kong-ee-database
+  KONG_PG_DATABASE: kong
+  KONG_PG_USER: kong
+  KONG_PG_PASSWORD: kong
+
 services:
   mongo:
     image: mongo:5
@@ -7,6 +18,11 @@ services:
     environment:
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+    volumes:
+      - mongo_db_data:/data/db
+    ports:
+      - 27018:27017
+
   netflix-db-api:
     image: faragoeszter/netflix-db-api:latest
     container_name: netflix-db-api
@@ -34,19 +50,82 @@ services:
       - netflix
     environment:
       - DB_API_URL
+      - KONG_ADMIN_API_URL
       - ADMIN_API_KEY
+      - KONG_ADMIN_API_KEY
       - VIRTUAL_HOST=netflixapi.local
     depends_on:
       netflix-db-api:
         condition: service_healthy
-  nginx-proxy:
-    image: jwilder/nginx-proxy
-    ports:
-      - "80:80"
-    volumes:
-      - /var/run/docker.sock:/tmp/docker.sock:ro
+  netflix-api2:
+    image: faragoeszter/netflix-api:latest
+    container_name: netflix-api2
     networks:
       - netflix
+    environment:
+      - DB_API_URL
+      - KONG_ADMIN_API_URL
+      - ADMIN_API_KEY
+      - KONG_ADMIN_API_KEY
+      - VIRTUAL_HOST=netflixapi.local
+    depends_on:
+      netflix-db-api:
+        condition: service_healthy
+
+  kong-ee-database:
+    container_name: kong-ee-database
+    image: postgres:latest
+    restart: on-failure
+    volumes:
+      - kong_db_data:/var/lib/postgresql
+    networks:
+      - netflix
+    environment:
+      POSTGRES_USER: kong
+      POSTGRES_DB: kong
+      POSTGRES_PASSWORD: kong
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "kong"]
+      interval: 5s
+      timeout: 10s
+      retries: 10
+
+  kong-bootstrap:
+    image: kong:3.4.2
+    container_name: kong-bootstrap
+    networks:
+      - netflix
+    depends_on:
+      kong-ee-database:
+        condition: service_healthy
+    restart: on-failure
+    environment:
+      <<: *kong-env
+      KONG_PASSWORD: handyshake # Admin GUI password (required for RBAC)
+    command: kong migrations bootstrap
+
+  kong:
+    image: kong:3.4.2
+    container_name: kong
+    restart: on-failure
+    networks:
+      - netflix
+    environment:
+      <<: *kong-env
+      KONG_ADMIN_LISTEN: 127.0.0.1:8001
+      KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
+      KONG_ADMIN_GUI_URL: http://${GW_HOST:-localhost}:82 # URL for GUI links
+      KONG_PASSWORD: handyshake # Admin GUI password (required for RBAC)
+    depends_on:
+      kong-bootstrap:
+        condition: service_completed_successfully
+      netflix-api:
+        condition: service_started
+      netflix-api2:
+        condition: service_started
+    ports:
+      - "80:8000" # Proxy HTTP
+      - "82:8002" # Kong Manager HTTP
 
 networks:
   netflix:

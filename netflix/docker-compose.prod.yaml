@@ -16,6 +16,11 @@ services:
     logging: *default-logging
     cpus: 0.5
     mem_limit: 256m
+  netflix-api2:
+    image: faragoeszter/netflix-api:1.0.0
+    logging: *default-logging
+    cpus: 0.5
+    mem_limit: 256m
 
   mongo:
     logging: *default-logging
@@ -29,6 +34,7 @@ services:
       - ./fluentd.conf:/fluentd/etc/fluentd.conf
     ports:
       - 24224:24224
+      - 5140:5140/udp
     environment:
       - FLUENTD_CONF
     networks:
@@ -36,6 +42,10 @@ services:
     cpus: 0.25
     mem_limit: 256m
 
-  nginx-proxy:
-    cpus: 0.25
-    mem_limit: 256m
+  kong:
+    cpus: 1
+    mem_limit: 512m
+
+  kong-ee-database:
+    cpus: 1
+    mem_limit: 512m

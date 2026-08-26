@@ -17,6 +17,11 @@ class UserRepository {
     return newUser;
   }
 
+  async getUserIdByUsername(username: string): Promise<string | undefined> {
+    const users = (await dbApiClient.get("/User", { params: { query: { username } } })).data;
+    return users.length ? users[0]._id : undefined;
+  }
+
   async findUserByUsernameAndPassword(username: string, password: string): Promise<User | undefined> {
     const existingUsers = (
       await dbApiClient.get("/User", {

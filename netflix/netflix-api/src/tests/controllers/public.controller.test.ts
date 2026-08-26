@@ -2,8 +2,8 @@ import { expect } from "chai";
 import axios from "axios";
 import "../../app";
 import { userRepository } from "../../api/services/user.repository";
-import { sessionRepository } from "../../api/services/session.repository";
 import sinon from "sinon";
+import nock from "nock";
 
 describe("Public controller", function () {
   const instance = axios.create({
@@ -15,7 +15,6 @@ describe("Public controller", function () {
 
   beforeEach(async () => {
     await userRepository.deleteAll();
-    await sessionRepository.deleteAll();
   });
 
   describe("POST /user", function () {
@@ -27,6 +26,13 @@ describe("Public controller", function () {
         email: "valaki.nagy@gmail.com",
         password: "password",
       };
+      const consumerReqBody = { username: reqBody.username, tags: ["user"] };
+      const aclReqBody = { group: "users" };
+      const consumerNock = nock(process.env.KONG_ADMIN_API_URL!).post("/consumers", consumerReqBody).reply(201);
+      const aclNock = nock(process.env.KONG_ADMIN_API_URL!)
+        .post(`/consumers/${reqBody.username}/acls`, aclReqBody)
+        .reply(201);
+
       const response = await instance.post("/user", reqBody);
       const createdUser = response.data;
       expect(response.status).to.equal(201);
@@ -36,6 +42,9 @@ describe("Public controller", function () {
       expect(createdUser.email).to.equal(reqBody.email);
       expect(createdUser.password).to.not.exist;
       expect(createdUser.id).to.exist;
+      consumerNock.done();
+      aclNock.done();
+      nock.cleanAll();
     });
 
     it("should return 409 Conflict if the username is already in use", async () => {
@@ -93,6 +102,9 @@ describe("Public controller", function () {
         email: "valaki.nagy@gmail.com",
         password: "password",
       });
+      const consumerCredentialNock = nock(process.env.KONG_ADMIN_API_URL!)
+        .post(`/consumers/${user.username}/key-auth`)
+        .reply(201, { key: "sessionId" });
       const credentials = { username: "valaki", password: "password" };
       const response = await instance.post("/user/login", credentials);
       const sessionId = response.data.sessionId;
@@ -100,24 +112,9 @@ describe("Public controller", function () {
       expect(sessionId).to.exist;
       expect(sessionId).to.be.a("string");
       expect(sessionId).to.be.not.empty;
-      expect(await sessionRepository.findBySessionId(sessionId)).to.equal(user.id);
-    });
-
-    it("should return generated session ID", async () => {
-      await userRepository.insert({
-        username: "valaki",
-        firstName: "Valaki",
-        lastName: "Nagy",
-        email: "valaki.nagy@gmail.com",
-        password: "password",
-      });
-      const credentials = { username: "valaki", password: "password" };
-      const sessionIdStub = sinon.stub(sessionRepository, "generateSessionId").returns("ses-sion-Id-St-ub");
-      const response = await instance.post("/user/login", credentials);
-      const sessionId = response.data.sessionId;
-      expect(response.status).to.equal(201);
-      expect(sessionId).to.equal("ses-sion-Id-St-ub");
-      sessionIdStub.restore();
+      expect(sessionId).to.equal("sessionId");
+      consumerCredentialNock.done();
+      nock.cleanAll();
     });
 
     it("should return 400 Bad Request if the username is invalid", async () => {

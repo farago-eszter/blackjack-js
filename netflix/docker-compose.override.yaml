@@ -7,3 +7,7 @@ services:
     build:
       context: ./netflix-api
     image: faragoeszter/netflix-api:dev
+  netflix-api2:
+    build:
+      context: ./netflix-api
+    image: faragoeszter/netflix-api:dev

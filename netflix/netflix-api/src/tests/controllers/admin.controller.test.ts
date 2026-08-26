@@ -70,15 +70,6 @@ describe("Admin controller", function () {
       scope.done();
       nock.cleanAll();
     });
-
-    it("should return 401 Unauthorized if the admin key is invalid", async () => {
-      const response = await instance.post("/videos", reqBody, {
-        headers: {
-          "X-Admin-API-key": "123",
-        },
-      });
-      expect(response.status).to.equal(401);
-    });
   });
 
   describe("PATCH /videos", function () {
@@ -106,19 +97,6 @@ describe("Admin controller", function () {
       expect(updatedVideo.type).to.equal(createdVideo.type);
       expect(updatedVideo.categories).to.deep.equal(createdVideo.categories);
       expect(updatedVideo.releaseYear).to.equal(reqBody.releaseYear);
-    });
-
-    it("should return 401 Unauthorized if the admin key is invalid", async () => {
-      const reqBody = {
-        releaseYear: 1998,
-      };
-      const videoToUpdateId = createdVideo.id;
-      const response = await instance.patch(`/videos/${videoToUpdateId}`, reqBody, {
-        headers: {
-          "X-Admin-API-key": "123",
-        },
-      });
-      expect(response.status).to.equal(401);
     });
 
     it("should return 404 when video with id not found", async () => {
@@ -164,16 +142,6 @@ describe("Admin controller", function () {
       const queuesAfterDelete = await queueRepository.getQueuesByVideoId(videoToDeleteId!);
       expect(response.status).to.equal(204);
       expect(queuesAfterDelete).to.have.lengthOf(0);
-    });
-
-    it("should return 401 Unauthorized if the admin key is invalid", async () => {
-      const videoToDeleteId = createdVideo.id;
-      const response = await instance.delete(`/videos/${videoToDeleteId}`, {
-        headers: {
-          "X-Admin-API-key": "123",
-        },
-      });
-      expect(response.status).to.equal(401);
     });
   });
 

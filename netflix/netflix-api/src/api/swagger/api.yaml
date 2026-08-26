@@ -94,9 +94,6 @@ paths:
       description: User can filter videos by title.
       operationId: getVideos
       x-eov-operation-handler: api/controllers/user.controller
-      security:
-        - userSecurity: []
-        - adminSecurity: []
       parameters:
         - name: title
           in: query
@@ -129,8 +126,6 @@ paths:
       description: Creates a new video in the system.
       operationId: createVideo
       x-eov-operation-handler: api/controllers/admin.controller
-      security:
-        - adminSecurity: []
       requestBody:
         description: Video object to create.
         required: true
@@ -162,8 +157,6 @@ paths:
       description: Updates an existing video identified by its ID.
       operationId: updateVideo
       x-eov-operation-handler: api/controllers/admin.controller
-      security:
-        - adminSecurity: []
       parameters:
         - name: id
           in: path
@@ -207,8 +200,6 @@ paths:
       description: Deletes an existing video identified by its ID.
       operationId: deleteVideo
       x-eov-operation-handler: api/controllers/admin.controller
-      security:
-        - adminSecurity: []
       parameters:
         - name: id
           in: path
@@ -228,7 +219,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /queue:
+  /queue/add:
     post:
       tags:
         - user
@@ -236,8 +227,6 @@ paths:
       description: Adds a video to the authenticated user's queue.
       operationId: addVideoToQueue
       x-eov-operation-handler: api/controllers/user.controller
-      security:
-        - userSecurity: []
       requestBody:
         description: Video id to add.
         required: true
@@ -275,7 +264,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-
+  /queue/items:
     get:
       tags:
         - user
@@ -283,8 +272,6 @@ paths:
       description: Returns the videos in the authenticated user's queue.
       operationId: getQueue
       x-eov-operation-handler: api/controllers/user.controller
-      security:
-        - userSecurity: []
       parameters:
         - name: order
           in: query
@@ -322,8 +309,6 @@ paths:
       description: Ends the authenticated user's current session.
       operationId: logout
       x-eov-operation-handler: api/controllers/user.controller
-      security:
-        - userSecurity: []
       responses:
         "200":
           description: Successful logout.
@@ -337,19 +322,6 @@ paths:
                 $ref: "#/components/schemas/Error"
 
 components:
-  securitySchemes:
-    userSecurity:
-      type: apiKey
-      description: Session ID used to authenticate a logged-in user.
-      name: X-Session-ID
-      in: header
-
-    adminSecurity:
-      type: apiKey
-      description: API key used to authorize admin user.
-      name: X-Admin-API-key
-      in: header
-
   schemas:
     User:
       title: User
