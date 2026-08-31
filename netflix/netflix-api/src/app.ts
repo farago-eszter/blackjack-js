@@ -35,7 +35,7 @@ app.use(
         },
         adminSecurity: (req: Request) => {
           const adminKey = req.headers["x-admin-api-key"];
-          return adminKey === "my-secret-admin-key";
+          return adminKey === process.env.ADMIN_API_KEY;
         },
       },
     },

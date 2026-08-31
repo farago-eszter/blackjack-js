@@ -1,0 +1,41 @@
+x-logging: &default-logging
+  driver: fluentd
+  options:
+    fluentd-address: localhost:24224
+    fluentd-async: "true"
+
+services:
+  netflix-db-api:
+    image: faragoeszter/netflix-db-api:1.0.0
+    logging: *default-logging
+    cpus: 0.5
+    mem_limit: 256m
+
+  netflix-api:
+    image: faragoeszter/netflix-api:1.0.0
+    logging: *default-logging
+    cpus: 0.5
+    mem_limit: 256m
+
+  mongo:
+    logging: *default-logging
+    cpus: 0.5
+    mem_limit: 1g
+
+  fluentd:
+    image: fluent/fluentd:v1.12.0-debian-1.0
+    container_name: fluentd
+    volumes:
+      - ./fluentd.conf:/fluentd/etc/fluentd.conf
+    ports:
+      - 24224:24224
+    environment:
+      - FLUENTD_CONF
+    networks:
+      - netflix
+    cpus: 0.25
+    mem_limit: 256m
+
+  nginx-proxy:
+    cpus: 0.25
+    mem_limit: 256m

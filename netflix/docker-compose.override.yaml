@@ -1,0 +1,9 @@
+services:
+  netflix-db-api:
+    build:
+      context: ./netflix-db-api
+    image: faragoeszter/netflix-db-api:dev
+  netflix-api:
+    build:
+      context: ./netflix-api
+    image: faragoeszter/netflix-api:dev

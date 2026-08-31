@@ -1,0 +1,54 @@
+services:
+  mongo:
+    image: mongo:5
+    container_name: mongo
+    networks:
+      - netflix
+    environment:
+      MONGO_INITDB_ROOT_USERNAME: ${MONGO_USERNAME}
+      MONGO_INITDB_ROOT_PASSWORD: ${MONGO_PASSWORD}
+  netflix-db-api:
+    image: faragoeszter/netflix-db-api:latest
+    container_name: netflix-db-api
+    networks:
+      - netflix
+    environment:
+      - MONGO_USERNAME
+      - MONGO_PASSWORD
+      - MONGO_HOST
+      - MONGO_PORT
+      - MONGO_DB_NAME
+    healthcheck:
+      test: ["CMD", "wget", "-qO", "/dev/null", "http://localhost:4000/health"]
+      interval: 30s
+      timeout: 30s
+      retries: 5
+      start_period: 10s
+    restart: on-failure
+    depends_on:
+      - mongo
+  netflix-api:
+    image: faragoeszter/netflix-api:latest
+    container_name: netflix-api
+    networks:
+      - netflix
+    environment:
+      - DB_API_URL
+      - ADMIN_API_KEY
+      - VIRTUAL_HOST=netflixapi.local
+    depends_on:
+      netflix-db-api:
+        condition: service_healthy
+  nginx-proxy:
+    image: jwilder/nginx-proxy
+    ports:
+      - "80:80"
+    volumes:
+      - /var/run/docker.sock:/tmp/docker.sock:ro
+    networks:
+      - netflix
+
+networks:
+  netflix:
+    name: netflix
+    driver: bridge

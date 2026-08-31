@@ -1,4 +1,4 @@
-import express, { Application } from "express";
+import express, { Application, Request, Response } from "express";
 import methodOverride from "method-override";
 import mongoose from "mongoose";
 import * as restify from "express-restify-mongoose";
@@ -19,12 +19,29 @@ restify.serve(app, QueueModel as any);
 
 async function startServer(): Promise<void> {
   try {
-    if (!process.env.MONGO_CONNECTION_STRING) {
-      throw new Error("MONGO_CONNECTION_STRING env not provided.");
+    if (
+      !process.env.MONGO_USERNAME ||
+      !process.env.MONGO_PASSWORD ||
+      !process.env.MONGO_HOST ||
+      !process.env.MONGO_PORT ||
+      !process.env.MONGO_DB_NAME
+    ) {
+      throw new Error("Env not provided for mongo connection.");
     }
-    await mongoose.connect(process.env.MONGO_CONNECTION_STRING);
+    await mongoose.connect(
+      `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB_NAME}?authSource=admin`,
+    );
 
     console.log("MongoDB connection established");
+
+    app.get("/health", async (req: Request, res: Response) => {
+      try {
+        await UserModel.countDocuments();
+        res.send();
+      } catch {
+        res.status(500).send();
+      }
+    });
 
     app.listen(4000, () => {
       console.log("Express server listening on port 4000");
