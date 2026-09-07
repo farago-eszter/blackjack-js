@@ -1,4 +1,3 @@
-import { sessionRepository } from "../api/services/session.repository";
 import { userRepository } from "../api/services/user.repository";
 import { Video, videoRepository, VideoType } from "../api/services/video.repository";
 
@@ -11,11 +10,9 @@ export async function createAuthenticatedUser() {
     password: "password",
   });
 
-  const sessionId = await sessionRepository.insert(user.id!);
-
   return {
     userId: user.id!,
-    sessionId,
+    username: user.username,
   };
 }
 
