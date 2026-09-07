@@ -4,11 +4,13 @@ import { queueRepository } from "../services/queue.repository";
 import { deleteApiKeyFromConsumer } from "../services/kong.service";
 import { userRepository } from "../services/user.repository";
 
+const usernameHeader = "x-consumer-username";
+
 export async function getVideos(req: Request, res: Response) {
   const sessionId = req.headers["x-session-id"] as string;
-  const username = req.headers["x-consumer-username"] as string;
-  const validUserId = await userRepository.getUserIdByUsername(username);
-  if (sessionId && validUserId === undefined) {
+  const username = req.headers[usernameHeader] as string;
+  const loggedInUserId = await userRepository.getUserIdByUsername(username);
+  if (sessionId && loggedInUserId === undefined) {
     res.status(401).json();
     return;
   }
@@ -20,14 +22,14 @@ export async function getVideos(req: Request, res: Response) {
 
 export async function addVideoToQueue(req: Request, res: Response, next: NextFunction) {
   try {
-    const username = req.headers["x-consumer-username"] as string;
-    const validUserId = await userRepository.getUserIdByUsername(username);
-    if (validUserId === undefined) {
+    const username = req.headers[usernameHeader] as string;
+    const loggedInUserId = await userRepository.getUserIdByUsername(username);
+    if (loggedInUserId === undefined) {
       res.status(401).json();
       return;
     }
     const videoId = req.body.videoId;
-    const videos = await queueRepository.add(validUserId, videoId);
+    const videos = await queueRepository.add(loggedInUserId, videoId);
     res.status(201).json(videos);
   } catch (err) {
     next(err);
@@ -36,14 +38,14 @@ export async function addVideoToQueue(req: Request, res: Response, next: NextFun
 
 export async function getQueue(req: Request, res: Response, next: NextFunction) {
   try {
-    const username = req.headers["x-consumer-username"] as string;
-    const validUserId = await userRepository.getUserIdByUsername(username);
-    if (validUserId === undefined) {
+    const username = req.headers[usernameHeader] as string;
+    const loggedInUserId = await userRepository.getUserIdByUsername(username);
+    if (loggedInUserId === undefined) {
       res.status(401).json();
       return;
     }
     const order = String(req.query.order);
-    const videos = await queueRepository.get(validUserId, order);
+    const videos = await queueRepository.get(loggedInUserId, order);
     res.json(videos);
   } catch (err) {
     next(err);
@@ -53,9 +55,9 @@ export async function getQueue(req: Request, res: Response, next: NextFunction) 
 export async function logout(req: Request, res: Response, next: NextFunction) {
   try {
     const sessionId = req.headers["x-session-id"] as string;
-    const username = req.headers["x-consumer-username"] as string;
-    const validUserId = await userRepository.getUserIdByUsername(username);
-    if (validUserId === undefined) {
+    const username = req.headers[usernameHeader] as string;
+    const loggedInUserId = await userRepository.getUserIdByUsername(username);
+    if (loggedInUserId === undefined) {
       res.status(401).json();
       return;
     }
