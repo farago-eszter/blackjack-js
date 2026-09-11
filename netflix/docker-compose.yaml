@@ -5,9 +5,9 @@ volumes:
 x-kong-config: &kong-env
   KONG_DATABASE: postgres
   KONG_PG_HOST: kong-ee-database
-  KONG_PG_DATABASE: kong
-  KONG_PG_USER: kong
-  KONG_PG_PASSWORD: kong
+  KONG_PG_DATABASE: ${POSTGRES_DATABASE}
+  KONG_PG_USER: ${POSTGRES_USER}
+  KONG_PG_PASSWORD: ${POSTGRES_PASSWORD}
 
 services:
   mongo:
@@ -77,9 +77,9 @@ services:
     networks:
       - netflix
     environment:
-      POSTGRES_USER: kong
-      POSTGRES_DB: kong
-      POSTGRES_PASSWORD: kong
+      - POSTGRES_USER
+      - POSTGRES_DB
+      - POSTGRES_PASSWORD
     healthcheck:
       test: ["CMD", "pg_isready", "-U", "kong"]
       interval: 5s
@@ -109,7 +109,7 @@ services:
       <<: *kong-env
       KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
-      KONG_ADMIN_GUI_URL: http://${GW_HOST:-localhost}:82
+      KONG_ADMIN_GUI_URL: http://localhost:82
     depends_on:
       kong-bootstrap:
         condition: service_completed_successfully
