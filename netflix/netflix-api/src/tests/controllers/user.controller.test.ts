@@ -63,7 +63,7 @@ describe("User controller", function () {
     });
   });
 
-  describe("POST /queue/add", () => {
+  describe("POST /queue", () => {
     let video1: Video;
     let username: string;
     let userId: string;
@@ -75,7 +75,7 @@ describe("User controller", function () {
 
     it("should add the video to the authenticated user's queue", async () => {
       const reqBody = { videoId: video1.id };
-      const response = await instance.post("/queue/add", reqBody, {
+      const response = await instance.post("/queue", reqBody, {
         headers: {
           "X-Session-ID": "sessionId",
           "X-Consumer-Username": username,
@@ -90,7 +90,7 @@ describe("User controller", function () {
     it("should return 400 if the video with id is already in queue", async () => {
       const reqBody = { videoId: video1.id };
       queueRepository.add(userId, video1.id!);
-      const response = await instance.post("/queue/add", reqBody, {
+      const response = await instance.post("/queue", reqBody, {
         headers: {
           "X-Session-ID": "sessionId",
           "X-Consumer-Username": username,
@@ -101,7 +101,7 @@ describe("User controller", function () {
 
     it("should return 400 if the video with id is not found", async () => {
       const reqBody = { videoId: "videoid" };
-      const response = await instance.post("/queue/add", reqBody, {
+      const response = await instance.post("/queue", reqBody, {
         headers: {
           "X-Session-ID": "sessionId",
           "X-Consumer-Username": username,
@@ -111,7 +111,7 @@ describe("User controller", function () {
     });
   });
 
-  describe("GET /queue/items", () => {
+  describe("GET /queue", () => {
     let video1: Video;
     let video2: Video;
     let username: string;
@@ -128,7 +128,7 @@ describe("User controller", function () {
     });
 
     it("should return the queue of the authenticated user", async () => {
-      const response = await instance.get("/queue/items", {
+      const response = await instance.get("/queue", {
         headers: {
           "X-Session-ID": "sessionId",
           "X-Consumer-Username": username,
@@ -141,7 +141,7 @@ describe("User controller", function () {
     });
 
     it("should return the authenticated user's queue in descending order", async () => {
-      const response = await instance.get("/queue/items?order=desc", {
+      const response = await instance.get("/queue?order=desc", {
         headers: {
           "X-Session-ID": "sessionId",
           "X-Consumer-Username": username,

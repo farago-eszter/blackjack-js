@@ -2,9 +2,6 @@ import axios from "axios";
 
 export const kongClient = axios.create({
   baseURL: process.env.KONG_ADMIN_API_URL,
-  headers: {
-    apikey: process.env.KONG_ADMIN_API_KEY,
-  },
 });
 
 export async function createConsumer(username: string): Promise<void> {

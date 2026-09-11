@@ -52,8 +52,6 @@ services:
       - DB_API_URL
       - KONG_ADMIN_API_URL
       - ADMIN_API_KEY
-      - KONG_ADMIN_API_KEY
-      - VIRTUAL_HOST=netflixapi.local
     depends_on:
       netflix-db-api:
         condition: service_healthy
@@ -66,8 +64,6 @@ services:
       - DB_API_URL
       - KONG_ADMIN_API_URL
       - ADMIN_API_KEY
-      - KONG_ADMIN_API_KEY
-      - VIRTUAL_HOST=netflixapi.local
     depends_on:
       netflix-db-api:
         condition: service_healthy
@@ -101,7 +97,6 @@ services:
     restart: on-failure
     environment:
       <<: *kong-env
-      KONG_PASSWORD: handyshake # Admin GUI password (required for RBAC)
     command: kong migrations bootstrap
 
   kong:
@@ -112,10 +107,9 @@ services:
       - netflix
     environment:
       <<: *kong-env
-      KONG_ADMIN_LISTEN: 127.0.0.1:8001
+      KONG_ADMIN_LISTEN: 0.0.0.0:8001
       KONG_ADMIN_GUI_LISTEN: 0.0.0.0:8002
-      KONG_ADMIN_GUI_URL: http://${GW_HOST:-localhost}:82 # URL for GUI links
-      KONG_PASSWORD: handyshake # Admin GUI password (required for RBAC)
+      KONG_ADMIN_GUI_URL: http://${GW_HOST:-localhost}:82
     depends_on:
       kong-bootstrap:
         condition: service_completed_successfully
@@ -124,8 +118,9 @@ services:
       netflix-api2:
         condition: service_started
     ports:
-      - "80:8000" # Proxy HTTP
-      - "82:8002" # Kong Manager HTTP
+      - "80:8000"
+      - "8001:8001"
+      - "82:8002"
 
 networks:
   netflix:

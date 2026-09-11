@@ -219,7 +219,7 @@ paths:
               schema:
                 $ref: "#/components/schemas/Error"
 
-  /queue/add:
+  /queue:
     post:
       tags:
         - user
@@ -264,7 +264,7 @@ paths:
             application/json:
               schema:
                 $ref: "#/components/schemas/Error"
-  /queue/items:
+
     get:
       tags:
         - user
