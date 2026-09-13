@@ -3,7 +3,6 @@ import path from "path";
 import logger from "morgan";
 import http from "http";
 import * as OpenApiValidator from "express-openapi-validator";
-import { sessionRepository } from "./api/services/session.repository";
 
 const port = 3000;
 const app: Application = express();
@@ -25,20 +24,6 @@ app.use(
     operationHandlers: path.join(__dirname), // default false
     validateRequests: true,
     validateResponses: true,
-    validateSecurity: {
-      handlers: {
-        userSecurity: async (req: Request) => {
-          const sessionId = req.headers["x-session-id"];
-          const userId = await sessionRepository.findBySessionId(sessionId as string);
-          req.res!.locals.userId = userId;
-          return !!userId;
-        },
-        adminSecurity: (req: Request) => {
-          const adminKey = req.headers["x-admin-api-key"];
-          return adminKey === process.env.ADMIN_API_KEY;
-        },
-      },
-    },
   }),
 );
 

@@ -4,7 +4,6 @@ import mongoose from "mongoose";
 import * as restify from "express-restify-mongoose";
 import { UserModel } from "./models/user.model";
 import { VideoModel } from "./models/video.model";
-import { SessionModel } from "./models/session.model";
 import { QueueModel } from "./models/queue.model";
 
 const app: Application = express();
@@ -14,23 +13,25 @@ app.use(methodOverride());
 
 restify.serve(app, UserModel as any);
 restify.serve(app, VideoModel as any);
-restify.serve(app, SessionModel as any);
 restify.serve(app, QueueModel as any);
 
 async function startServer(): Promise<void> {
   try {
+    const testMode = process.env.START_MODE === "test";
     if (
-      !process.env.MONGO_USERNAME ||
-      !process.env.MONGO_PASSWORD ||
-      !process.env.MONGO_HOST ||
-      !process.env.MONGO_PORT ||
-      !process.env.MONGO_DB_NAME
+      !testMode &&
+      (!process.env.MONGO_USERNAME ||
+        !process.env.MONGO_PASSWORD ||
+        !process.env.MONGO_HOST ||
+        !process.env.MONGO_PORT ||
+        !process.env.MONGO_DB_NAME)
     ) {
       throw new Error("Env not provided for mongo connection.");
     }
-    await mongoose.connect(
-      `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB_NAME}?authSource=admin`,
-    );
+    const connectionString = testMode
+      ? "mongodb://localhost:27017/test"
+      : `mongodb://${process.env.MONGO_USERNAME}:${process.env.MONGO_PASSWORD}@${process.env.MONGO_HOST}:${process.env.MONGO_PORT}/${process.env.MONGO_DB_NAME}?authSource=admin`;
+    await mongoose.connect(connectionString);
 
     console.log("MongoDB connection established");
 
